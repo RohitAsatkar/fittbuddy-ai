@@ -52,6 +52,26 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+                fitness: {
+                    purple: {
+                        light: '#9b87f5',
+                        DEFAULT: '#8B5CF6',
+                        dark: '#7E69AB'
+                    },
+                    orange: '#F97316',
+                    blue: '#0EA5E9',
+                    gray: {
+                        light: '#F1F0FB',
+                        DEFAULT: '#8E9196', 
+                        dark: '#1A1F2C'
+                    },
+                    pastel: {
+                        green: '#F2FCE2',
+                        purple: '#E5DEFF', 
+                        pink: '#FFDEE2',
+                        blue: '#D3E4FD'
+                    }
+                },
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
