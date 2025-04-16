@@ -1,5 +1,5 @@
-
 import { ChatMessage, FitnessGoal, UserProfile, WorkoutDifficulty, WorkoutType } from "@/types";
+import { sampleWorkouts } from "./workouts";
 
 // Sample fitness tips for different goals
 export const fitnessTips: Record<FitnessGoal, string[]> = {
@@ -67,12 +67,161 @@ export const motivationalQuotes = [
   "Strength doesn't come from what you can do. It comes from overcoming the things you once thought you couldn't."
 ];
 
-// Sample AI responses based on context
+// Helper function to generate a workout plan
+const generateWorkoutPlan = (userProfile: UserProfile | undefined) => {
+  if (!userProfile) {
+    return "To provide a personalized workout plan, I need to know your fitness goals and preferences. Could you share those with me?";
+  }
+
+  const matchingWorkouts = sampleWorkouts.filter(
+    workout => 
+      workout.difficulty === userProfile.workoutDifficulty &&
+      workout.type === userProfile.preferredWorkoutType
+  );
+
+  if (matchingWorkouts.length === 0) {
+    return "I couldn't find an exact match for your preferences, but here's a general workout plan you can follow...";
+  }
+
+  const workout = matchingWorkouts[Math.floor(Math.random() * matchingWorkouts.length)];
+  
+  return `Here's a personalized workout plan based on your ${userProfile.fitnessGoal.replace('_', ' ')} goal:
+
+${workout.title}
+Duration: ${workout.duration} minutes
+Estimated calories burn: ${workout.caloriesBurn}
+
+Exercises:
+${workout.exercises.map(ex => `- ${ex.name}: ${ex.sets} sets of ${ex.reps}`).join('\n')}
+
+Would you like me to explain any of these exercises in detail?`;
+};
+
+// Helper function to generate a diet plan
+const generateDietPlan = (goal: FitnessGoal) => {
+  const plans = {
+    weight_loss: `Here's a balanced diet plan for weight loss:
+
+Breakfast:
+- Oatmeal with berries and nuts
+- Greek yogurt
+- Green tea
+
+Lunch:
+- Grilled chicken breast
+- Mixed salad with olive oil dressing
+- Quinoa
+
+Dinner:
+- Baked fish
+- Steamed vegetables
+- Brown rice
+
+Snacks:
+- Apple with almond butter
+- Carrot sticks with hummus
+
+Remember to maintain a slight caloric deficit and stay hydrated!`,
+
+    muscle_gain: `Here's a high-protein diet plan for muscle gain:
+
+Breakfast:
+- 4 egg omelet with spinach and cheese
+- Whole grain toast
+- Protein shake
+
+Lunch:
+- Lean beef or chicken
+- Sweet potato
+- Broccoli
+- Brown rice
+
+Dinner:
+- Salmon or tuna
+- Quinoa
+- Mixed vegetables
+- Greek yogurt
+
+Snacks:
+- Protein bar
+- Mixed nuts
+- Banana with peanut butter
+
+Aim for a caloric surplus of 300-500 calories and 1.6-2.2g protein per kg of bodyweight.`,
+
+    general_fitness: `Here's a balanced diet plan for general fitness:
+
+Breakfast:
+- Whole grain cereal with milk
+- Fresh fruit
+- Hard-boiled eggs
+
+Lunch:
+- Turkey sandwich on whole grain bread
+- Mixed salad
+- Yogurt
+
+Dinner:
+- Grilled chicken or fish
+- Brown rice or sweet potato
+- Steamed vegetables
+
+Snacks:
+- Fresh fruit
+- Mixed nuts
+- Hummus with vegetables
+
+Focus on balanced nutrition and staying hydrated!`
+  };
+
+  return plans[goal] || plans.general_fitness;
+};
+
+// Updated assistant response logic
 export const getAssistantResponse = (
   userMessage: string,
   userProfile?: UserProfile
 ): string => {
-  userMessage = userMessage.toLowerCase();
+  const message = userMessage.toLowerCase();
+
+  // Check for workout plan request
+  if (
+    message.includes("workout plan") || 
+    message.includes("exercise plan") ||
+    (message.includes("plan") && message.includes("exercise")) ||
+    (message.includes("give") && message.includes("workout"))
+  ) {
+    return generateWorkoutPlan(userProfile);
+  }
+
+  // Check for diet/nutrition plan request
+  if (
+    message.includes("diet plan") ||
+    message.includes("meal plan") ||
+    message.includes("nutrition plan") ||
+    message.includes("what should i eat") ||
+    (message.includes("plan") && message.includes("food"))
+  ) {
+    return generateDietPlan(userProfile?.fitnessGoal || "general_fitness");
+  }
+
+  // Check for specific exercise questions
+  if (message.includes("how to") && message.includes("exercise")) {
+    const exercise = sampleWorkouts
+      .flatMap(w => w.exercises)
+      .find(e => message.includes(e.name.toLowerCase()));
+    
+    if (exercise) {
+      return `Here's how to do ${exercise.name}:
+${exercise.description}
+
+Sets: ${exercise.sets}
+Reps: ${exercise.reps}
+Rest between sets: ${exercise.restTime} seconds
+
+Would you like me to explain anything else about this exercise?`;
+    }
+  }
 
   // Check if asking about workout recommendations
   if (userMessage.includes("workout") && (userMessage.includes("recommend") || userMessage.includes("suggest"))) {
@@ -111,7 +260,7 @@ export const getAssistantResponse = (
   }
 
   // Default response
-  return "I'm your FitBuddy AI assistant! I can help with workout recommendations, answer fitness questions, or provide motivation. What would you like help with today?";
+  return "I'm your FitBuddy AI assistant! I can help with workout plans, diet advice, or answer any fitness-related questions. What would you like to know about?";
 };
 
 // Generate a health tip of the day
