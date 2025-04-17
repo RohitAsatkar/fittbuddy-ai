@@ -9,7 +9,6 @@ React Hook Form and Zod for form validation
 
 React Router, React Query, and more
 
-
 # 💪 Fitbuddy Ai
 
 **Fitbuddy Ai** is a modern, AI-enhanced fitness tracking and wellness platform built using React, TypeScript, Tailwind CSS, and Radix UI. The project provides a beautiful, accessible, and responsive interface for users looking to enhance their health and lifestyle.
