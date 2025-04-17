@@ -18,7 +18,7 @@ React Router, React Query, and more
 
 ## 🚀 Features
 
-- 🧠 AI Integration
+- 🧠 AI Integration with GPT (via `gptengineer.js`)
 - 🎨 Stylish UI using TailwindCSS with custom color themes
 - 🎛️ Radix UI components for clean and accessible interactivity
 - 📝 Form handling via React Hook Form and Zod
@@ -26,6 +26,26 @@ React Router, React Query, and more
 - 📊 Charting with Recharts
 - 🌐 Routing via React Router
 
+---
+
+## 🛠️ Tech Stack
+
+| Tech               | Description                              |
+|--------------------|------------------------------------------|
+| React + Vite       | Fast dev experience and lightweight build |
+| TypeScript         | Static typing for safer code              |
+| Tailwind CSS       | Utility-first CSS framework               |
+| Radix UI           | Unstyled, accessible UI components        |
+| React Query        | Data fetching and caching                 |
+| React Hook Form    | Performant form state management          |
+| Zod                | Schema validation                         |
+| Recharts           | Data visualization                        |
+
+---
+
+## 📂 Project Structure
+
+buddy-ai-fit/ ├── public/ ├── src/ │ ├── components/ │ ├── pages/ │ ├── app/ │ └── main.tsx ├── index.html ├── package.json ├── tailwind.config.ts └── tsconfig.json
 
 ---
 
