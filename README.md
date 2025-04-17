@@ -63,14 +63,6 @@ Radix UI
 React
 
 
-
----
-
-
-📄 License
-This project is open-source. feel fre to edit it
-
-
 ---
 
 ## 🧪 Getting Started
