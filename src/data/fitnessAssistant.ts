@@ -1,4 +1,3 @@
-
 import { ChatMessage, FitnessGoal, UserProfile } from "@/types";
 import { getTipOfTheDay, motivationalQuotes } from "./tips";
 import { generateDietPlan } from "./dietPlans";
@@ -163,3 +162,5 @@ export const generateInitialChatHistory = (): ChatMessage[] => {
   ];
 };
 
+// Export getTipOfTheDay so it can be used in other files
+export { getTipOfTheDay };

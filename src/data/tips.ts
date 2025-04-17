@@ -73,4 +73,3 @@ export const getTipOfTheDay = (goal: FitnessGoal = "general_fitness"): string =>
   const randomIndex = Math.floor(Math.random() * goalTips.length);
   return goalTips[randomIndex];
 };
-

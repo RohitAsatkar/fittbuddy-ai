@@ -8,7 +8,7 @@ import { ArrowRight, Dumbbell, MessageSquare } from "lucide-react";
 import { BicepsIcon } from "@/components/icons/biceps-icon";
 import { getRandomWorkout } from "@/data/workouts";
 import { WorkoutCard } from "@/components/workout-card";
-import { getTipOfTheDay } from "@/data/fitnessAssistant";
+import { getTipOfTheDay } from "@/data/tips";
 import { NavBar } from "@/components/nav-bar";
 
 export default function Index() {

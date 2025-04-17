@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar } from "@/components/ui/avatar";
 import { Send } from "lucide-react";
-import { getTipOfTheDay } from "@/data/fitnessAssistant";
+import { getTipOfTheDay } from "@/data/tips";
 import { useUser } from "@/context/UserContext";
 
 export function ChatInterface() {
