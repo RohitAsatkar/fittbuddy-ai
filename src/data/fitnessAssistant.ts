@@ -11,29 +11,69 @@ const capitalizeFirstLetter = (string: string) => {
   return string.charAt(0).toUpperCase() + string.replace('_', ' ').slice(1);
 };
 
-// Improved function to extract exercise names from user messages
+// Improved function to extract exercise names from user messages with more accurate matching
 const extractExerciseName = (message: string): string | null => {
   const lowerMessage = message.toLowerCase();
   
-  // Common exercise terms that might be present in queries
-  const exerciseTerms = [
-    "bench press", "push-up", "pushup", "push up", "squat", "plank", "lunge", "deadlift", 
-    "curl", "press", "pull-up", "pullup", "pull up", "row", "fly", "raise", "extension", 
-    "crunch", "sit-up", "situp", "sit up", "twist", "dip", "lateral raise", "overhead press",
-    "hammer curl", "skull crusher", "tricep extension", "calf raise", "leg press",
-    "chest fly", "incline press", "decline press", "military press", "shrug",
-    "face pull", "burpee", "jumping jack", "mountain climber", "russian twist",
-    "superman", "hyperextension", "back extension", "glute bridge", "hip thrust",
-    "good morning", "reverse fly", "lat pulldown", "bicep curl", "tricep pushdown",
-    "hanging leg raise", "bicycle crunch", "side plank", "step-up", "box jump",
-    "kettlebell swing", "kettlebell snatch", "kettlebell clean", "farmers walk",
-    "farmers carry", "sled push", "battle rope", "jump rope"
+  // Common full exercise names that might be present in queries - exact matches first
+  const fullExerciseNames = [
+    "bench press", "incline bench press", "decline bench press",
+    "push-up", "pushup", "push up", 
+    "squat", "front squat", "goblet squat", "back squat",
+    "plank", "side plank", 
+    "lunge", "walking lunge", "reverse lunge",
+    "deadlift", "romanian deadlift", "sumo deadlift",
+    "bicep curl", "hammer curl", "preacher curl",
+    "shoulder press", "overhead press", "military press",
+    "pull-up", "pullup", "pull up", "chin up",
+    "row", "bent over row", "inverted row", "dumbbell row",
+    "fly", "chest fly", "lateral raise", 
+    "extension", "tricep extension", "leg extension",
+    "crunch", "sit-up", "situp", "sit up", "russian twist",
+    "dip", "tricep dip", "chest dip",
+    "leg press", "calf raise", "leg curl",
+    "face pull", "upright row", "shrug", 
+    "burpee", "jumping jack", "mountain climber",
+    "superman", "hyperextension", "back extension", 
+    "glute bridge", "hip thrust", "good morning", 
+    "reverse fly", "lat pulldown", "tricep pushdown",
+    "hanging leg raise", "bicycle crunch", "step-up", "box jump",
+    "kettlebell swing", "kettlebell snatch", "kettlebell clean", 
+    "farmers walk", "farmers carry", "sled push", "battle rope", "jump rope"
   ];
   
-  // Check for specific exercise names
-  for (const term of exerciseTerms) {
-    if (lowerMessage.includes(term)) {
-      return term;
+  // First check for exact matches (when the message contains the full exercise name)
+  for (const exercise of fullExerciseNames) {
+    // Full match or surrounded by spaces/punctuation to avoid partial matches
+    if (lowerMessage.includes(` ${exercise} `) || 
+        lowerMessage.includes(`${exercise} `) || 
+        lowerMessage.includes(` ${exercise}`) || 
+        lowerMessage === exercise) {
+      console.log(`Found exact exercise match: ${exercise}`);
+      return exercise;
+    }
+  }
+  
+  // Then check if it's part of a "how to do X" query
+  const howToPatterns = [
+    "how to do ", "how to perform ", "how do i do ", 
+    "how to ", "show me how to do ", "tell me about "
+  ];
+  
+  for (const pattern of howToPatterns) {
+    if (lowerMessage.includes(pattern)) {
+      const afterPattern = lowerMessage.split(pattern)[1]?.trim();
+      if (afterPattern) {
+        // Check if what follows the pattern matches any exercise
+        for (const exercise of fullExerciseNames) {
+          if (afterPattern.startsWith(exercise) || 
+              afterPattern === exercise || 
+              exercise.startsWith(afterPattern)) {
+            console.log(`Found exercise in how-to query: ${exercise}`);
+            return exercise;
+          }
+        }
+      }
     }
   }
   
@@ -54,9 +94,19 @@ const extractExerciseName = (message: string): string | null => {
         if (lowerMessage.includes(`${keyword} exercise`) || 
             lowerMessage.includes(`exercise for ${keyword}`) ||
             lowerMessage.includes(`${keyword} workout`)) {
+          console.log(`Found muscle group query: ${group}`);
           return group;
         }
       }
+    }
+  }
+  
+  // If no exact match found but a partial exercise name exists in the message
+  // Look for any exercise as a fallback, but with lower confidence
+  for (const exercise of fullExerciseNames) {
+    if (lowerMessage.includes(exercise)) {
+      console.log(`Found partial exercise match: ${exercise}`);
+      return exercise;
     }
   }
   

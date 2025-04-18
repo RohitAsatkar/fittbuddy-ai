@@ -1,4 +1,3 @@
-
 import { Exercise } from "@/types";
 import { sampleWorkouts } from "./workouts";
 import { exerciseDatabase } from "./exerciseDatabase";
@@ -16,7 +15,6 @@ interface ExerciseInstruction {
   tips: string[];
 }
 
-// Exercise instructions database with variations
 export const exerciseInstructions: Record<string, ExerciseInstruction> = {
   "push-up": {
     name: "Push-Up",
@@ -214,14 +212,11 @@ export const exerciseInstructions: Record<string, ExerciseInstruction> = {
   }
 };
 
-// Advanced helper function to get exercise instructions with fuzzy matching
 export const getExerciseInstructions = (exerciseName: string) => {
   console.log(`Searching for exercise instructions for: ${exerciseName}`);
   
-  // Convert exercise name to lowercase for case-insensitive matching
   const searchTerm = exerciseName.toLowerCase();
   
-  // 1. Look for an exact match first in our detailed instructions
   const exactMatchKey = Object.keys(exerciseInstructions).find(
     key => key.toLowerCase() === searchTerm
   );
@@ -231,7 +226,30 @@ export const getExerciseInstructions = (exerciseName: string) => {
     return formatExerciseInstructions(exerciseInstructions[exactMatchKey]);
   }
   
-  // 2. Look for partial matches in our detailed instructions
+  const exerciseMappings: Record<string, string[]> = {
+    "bench press": ["bench", "barbell bench", "flat bench"],
+    "squat": ["bodyweight squat", "air squat", "barbell squat"],
+    "deadlift": ["conventional deadlift", "standard deadlift"],
+    "overhead press": ["military press", "shoulder press", "standing press"],
+    "leg press": ["machine leg press", "seated leg press", "45-degree leg press"],
+    "plank": ["forearm plank", "standard plank", "elbow plank"],
+    "bicep curl": ["dumbbell curl", "barbell curl", "bicep", "biceps curl"],
+    "pull-up": ["chin up", "chinup", "pullup"]
+  };
+  
+  for (const [primaryExercise, variations] of Object.entries(exerciseMappings)) {
+    if (variations.some(v => searchTerm.includes(v)) || searchTerm.includes(primaryExercise)) {
+      const mappedExerciseKey = Object.keys(exerciseInstructions).find(
+        key => key.toLowerCase() === primaryExercise.toLowerCase()
+      );
+      
+      if (mappedExerciseKey) {
+        console.log(`Found match through mapping: ${searchTerm} -> ${primaryExercise}`);
+        return formatExerciseInstructions(exerciseInstructions[mappedExerciseKey]);
+      }
+    }
+  }
+  
   const partialMatchKey = Object.keys(exerciseInstructions).find(
     key => searchTerm.includes(key.toLowerCase()) || 
           key.toLowerCase().includes(searchTerm)
@@ -242,7 +260,6 @@ export const getExerciseInstructions = (exerciseName: string) => {
     return formatExerciseInstructions(exerciseInstructions[partialMatchKey]);
   }
   
-  // 3. Check if the search term is for a muscle group
   const muscleGroups = ["chest", "back", "legs", "shoulders", "arms", "core"];
   const matchedMuscleGroup = muscleGroups.find(group => 
     searchTerm === group || searchTerm.includes(group) || group.includes(searchTerm)
@@ -250,10 +267,9 @@ export const getExerciseInstructions = (exerciseName: string) => {
   
   if (matchedMuscleGroup) {
     console.log(`Identified as a muscle group search: ${matchedMuscleGroup}`);
-    // Get exercises for this muscle group
     const muscleGroupExercises = Object.values(exerciseDatabase)
       .filter(ex => ex.muscleGroup.toLowerCase().includes(matchedMuscleGroup.toLowerCase()))
-      .slice(0, 5); // Get top 5 exercises
+      .slice(0, 5);
     
     if (muscleGroupExercises.length > 0) {
       return `
@@ -268,10 +284,10 @@ Would you like more detailed instructions for any of these exercises?
     }
   }
   
-  // 4. Look in our exercise database for name matches
   const databaseExercise = Object.values(exerciseDatabase).find(
-    ex => ex.name.toLowerCase().includes(searchTerm) || 
-          searchTerm.includes(ex.name.toLowerCase())
+    ex => ex.name.toLowerCase() === searchTerm || 
+          searchTerm.includes(ex.name.toLowerCase()) || 
+          ex.name.toLowerCase().includes(searchTerm)
   );
   
   if (databaseExercise) {
@@ -279,24 +295,22 @@ Would you like more detailed instructions for any of these exercises?
     return formatDatabaseExercise(databaseExercise);
   }
   
-  // 5. Look in sample workouts as a fallback
   const workoutExercise = sampleWorkouts
     .flatMap(w => w.exercises)
-    .find(ex => ex.name.toLowerCase().includes(searchTerm) || 
-               searchTerm.includes(ex.name.toLowerCase()));
+    .find(ex => ex.name.toLowerCase() === searchTerm || 
+               searchTerm.includes(ex.name.toLowerCase()) || 
+               ex.name.toLowerCase().includes(searchTerm));
   
   if (workoutExercise) {
     console.log(`Found match in sample workouts: ${workoutExercise.name}`);
     return formatWorkoutExercise(workoutExercise);
   }
   
-  // 6. Try to find similar exercises as a last resort
   const allExerciseNames = [
     ...Object.keys(exerciseInstructions).map(k => exerciseInstructions[k].name),
     ...Object.values(exerciseDatabase).map(ex => ex.name)
   ];
   
-  // Find exercises that contain any word from the search term
   const searchWords = searchTerm.split(/\s+/);
   const similarExercises = allExerciseNames.filter(name => 
     searchWords.some(word => 
@@ -315,12 +329,10 @@ Would you like to learn more about any of these?
     `;
   }
   
-  // No match found
   console.log(`No match found for: ${exerciseName}`);
   return `I don't have specific instructions for "${exerciseName}". Try asking about common exercises like push-ups, squats, or planks. Or you can specify which muscle group you'd like to train, and I can suggest exercises for that area.`;
 };
 
-// Format exercise instructions
 const formatExerciseInstructions = (exercise: ExerciseInstruction) => {
   return `
 ### ${exercise.name}
@@ -345,7 +357,6 @@ ${exercise.tips.map(tip => `• ${tip}`).join('\n')}
 `;
 };
 
-// Format exercise from our database
 const formatDatabaseExercise = (exercise: Exercise) => {
   return `
 ### ${exercise.name}
@@ -372,7 +383,6 @@ This is a great exercise to include in your ${exercise.muscleGroup.toLowerCase()
 `;
 };
 
-// Format workout exercise
 const formatWorkoutExercise = (exercise: Exercise) => {
   return `
 ### ${exercise.name}
@@ -394,4 +404,3 @@ ${exercise.description}
 #### Muscles Worked:
 Primary: ${exercise.muscleGroup}
 `;
-};
