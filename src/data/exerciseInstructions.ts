@@ -91,54 +91,232 @@ export const exerciseInstructions: Record<string, ExerciseInstruction> = {
       "Engage your glutes to help maintain proper hip position.",
       "Look at a spot on the floor about a foot in front of you to keep your neck neutral."
     ]
+  },
+  "squat": {
+    name: "Squat",
+    description: "A fundamental lower body compound exercise that strengthens the quads, hamstrings, and glutes.",
+    instructions: [
+      "Stand with feet shoulder-width apart or slightly wider.",
+      "Keep your chest up and core engaged.",
+      "Bend at your knees and hips as if sitting down in a chair.",
+      "Lower until your thighs are at least parallel to the ground (or lower if mobility allows).",
+      "Push through your heels to return to the starting position."
+    ],
+    variations: [
+      {
+        name: "Goblet Squat",
+        description: "A squat variation that involves holding a weight in front of your chest.",
+        instructions: [
+          "Hold a dumbbell or kettlebell close to your chest with both hands.",
+          "Stand with feet shoulder-width apart.",
+          "Perform a squat while keeping the weight close to your body.",
+          "Use the weight as a counterbalance to help maintain proper form."
+        ]
+      },
+      {
+        name: "Bulgarian Split Squat",
+        description: "A unilateral squat that targets one leg at a time for better balance and stability.",
+        instructions: [
+          "Stand about two feet in front of a bench or step.",
+          "Place one foot behind you on the bench.",
+          "Lower your body by bending your front knee, keeping your torso upright.",
+          "Push through the heel of your front foot to return to the starting position."
+        ]
+      }
+    ],
+    muscleGroups: ["quadriceps", "hamstrings", "glutes", "core"],
+    tips: [
+      "Keep your knees in line with your toes - don't let them collapse inward.",
+      "Maintain a neutral spine throughout the movement.",
+      "Drive through your heels rather than your toes.",
+      "Focus on depth over weight for muscle development."
+    ]
+  },
+  "deadlift": {
+    name: "Deadlift",
+    description: "A powerful compound exercise that targets the posterior chain, including the back, glutes, and hamstrings.",
+    instructions: [
+      "Stand with feet hip-width apart, with the barbell positioned over the middle of your feet.",
+      "Bend at your hips and knees to grip the bar with hands just outside your legs.",
+      "Keep your chest up and back flat as you lift the bar by extending your hips and knees.",
+      "Stand tall at the top, with shoulders back and core engaged.",
+      "Return the bar to the ground by hinging at the hips and bending the knees."
+    ],
+    variations: [
+      {
+        name: "Romanian Deadlift",
+        description: "A variation that emphasizes the hamstrings and glutes with less knee bend.",
+        instructions: [
+          "Start standing with the bar in hand at hip level.",
+          "Keep a slight bend in your knees throughout the movement.",
+          "Hinge at your hips to lower the bar along your legs.",
+          "Stop when you feel a stretch in your hamstrings, then return to starting position."
+        ]
+      },
+      {
+        name: "Sumo Deadlift",
+        description: "A wider stance variation that places more emphasis on the quads and inner thighs.",
+        instructions: [
+          "Stand with feet wider than shoulder-width apart, toes pointed out.",
+          "Grip the bar with hands inside your legs.",
+          "Keep your chest up and back flat as you lift by extending hips and knees.",
+          "Maintain a more upright torso compared to conventional deadlifts."
+        ]
+      }
+    ],
+    muscleGroups: ["back", "glutes", "hamstrings", "traps", "core"],
+    tips: [
+      "Keep the bar close to your body throughout the movement.",
+      "Start with lighter weights to perfect your form before going heavy.",
+      "Engage your lats by thinking about 'protecting your armpits'.",
+      "Think about pushing the floor away rather than pulling the weight up."
+    ]
+  },
+  "bench press": {
+    name: "Bench Press",
+    description: "A classic upper body strength exercise that primarily targets the chest, shoulders, and triceps.",
+    instructions: [
+      "Lie flat on a bench with feet planted firmly on the ground.",
+      "Grip the barbell slightly wider than shoulder-width apart.",
+      "Unrack the bar and hold it directly above your chest with arms extended.",
+      "Lower the bar in a controlled manner until it touches your mid-chest.",
+      "Press the bar back up to the starting position by extending your arms."
+    ],
+    variations: [
+      {
+        name: "Incline Bench Press",
+        description: "Performed on an inclined bench to emphasize the upper chest.",
+        instructions: [
+          "Set the bench to a 30-45 degree incline.",
+          "Grip the bar slightly wider than shoulder-width apart.",
+          "Lower the bar to the upper part of your chest.",
+          "Press back up to the starting position by extending your arms."
+        ]
+      },
+      {
+        name: "Dumbbell Bench Press",
+        description: "Using dumbbells instead of a barbell for greater range of motion.",
+        instructions: [
+          "Lie flat on a bench holding a dumbbell in each hand at chest level.",
+          "Press the dumbbells upward until arms are extended.",
+          "Lower the dumbbells back to chest level in a controlled manner.",
+          "This variation allows each arm to work independently."
+        ]
+      }
+    ],
+    muscleGroups: ["chest", "shoulders", "triceps"],
+    tips: [
+      "Keep your wrists straight and directly above your elbows.",
+      "Maintain contact with the bench with your head, upper back, and glutes.",
+      "Slightly arch your lower back to protect your spine and engage your chest more.",
+      "Always use a spotter when lifting heavy weights."
+    ]
   }
 };
 
-// Helper function to get exercise instructions
+// Advanced helper function to get exercise instructions with fuzzy matching
 export const getExerciseInstructions = (exerciseName: string) => {
+  console.log(`Searching for exercise instructions for: ${exerciseName}`);
+  
   // Convert exercise name to lowercase for case-insensitive matching
   const searchTerm = exerciseName.toLowerCase();
   
-  // Look for an exact match first in our detailed instructions
+  // 1. Look for an exact match first in our detailed instructions
   const exactMatchKey = Object.keys(exerciseInstructions).find(
     key => key.toLowerCase() === searchTerm
   );
   
   if (exactMatchKey) {
+    console.log(`Found exact match in instructions: ${exactMatchKey}`);
     return formatExerciseInstructions(exerciseInstructions[exactMatchKey]);
   }
   
-  // Look for partial matches in our detailed instructions
+  // 2. Look for partial matches in our detailed instructions
   const partialMatchKey = Object.keys(exerciseInstructions).find(
     key => searchTerm.includes(key.toLowerCase()) || 
           key.toLowerCase().includes(searchTerm)
   );
   
   if (partialMatchKey) {
+    console.log(`Found partial match in instructions: ${partialMatchKey}`);
     return formatExerciseInstructions(exerciseInstructions[partialMatchKey]);
   }
   
-  // Look in our exercise database
+  // 3. Check if the search term is for a muscle group
+  const muscleGroups = ["chest", "back", "legs", "shoulders", "arms", "core"];
+  const matchedMuscleGroup = muscleGroups.find(group => 
+    searchTerm === group || searchTerm.includes(group) || group.includes(searchTerm)
+  );
+  
+  if (matchedMuscleGroup) {
+    console.log(`Identified as a muscle group search: ${matchedMuscleGroup}`);
+    // Get exercises for this muscle group
+    const muscleGroupExercises = Object.values(exerciseDatabase)
+      .filter(ex => ex.muscleGroup.toLowerCase().includes(matchedMuscleGroup.toLowerCase()))
+      .slice(0, 5); // Get top 5 exercises
+    
+    if (muscleGroupExercises.length > 0) {
+      return `
+### Top ${matchedMuscleGroup.charAt(0).toUpperCase() + matchedMuscleGroup.slice(1)} Exercises
+
+Here are some effective exercises for your ${matchedMuscleGroup}:
+
+${muscleGroupExercises.map((ex, i) => `${i+1}. **${ex.name}**: ${ex.description}\n   Sets: ${ex.sets}, Reps: ${ex.reps}, Rest: ${ex.restTime}s`).join('\n\n')}
+
+Would you like more detailed instructions for any of these exercises?
+      `;
+    }
+  }
+  
+  // 4. Look in our exercise database for name matches
   const databaseExercise = Object.values(exerciseDatabase).find(
     ex => ex.name.toLowerCase().includes(searchTerm) || 
           searchTerm.includes(ex.name.toLowerCase())
   );
   
   if (databaseExercise) {
+    console.log(`Found match in database: ${databaseExercise.name}`);
     return formatDatabaseExercise(databaseExercise);
   }
   
-  // Look in sample workouts as a fallback
+  // 5. Look in sample workouts as a fallback
   const workoutExercise = sampleWorkouts
     .flatMap(w => w.exercises)
     .find(ex => ex.name.toLowerCase().includes(searchTerm) || 
                searchTerm.includes(ex.name.toLowerCase()));
   
   if (workoutExercise) {
+    console.log(`Found match in sample workouts: ${workoutExercise.name}`);
     return formatWorkoutExercise(workoutExercise);
   }
   
+  // 6. Try to find similar exercises as a last resort
+  const allExerciseNames = [
+    ...Object.keys(exerciseInstructions).map(k => exerciseInstructions[k].name),
+    ...Object.values(exerciseDatabase).map(ex => ex.name)
+  ];
+  
+  // Find exercises that contain any word from the search term
+  const searchWords = searchTerm.split(/\s+/);
+  const similarExercises = allExerciseNames.filter(name => 
+    searchWords.some(word => 
+      name.toLowerCase().includes(word) && word.length > 3
+    )
+  ).slice(0, 3);
+  
+  if (similarExercises.length > 0) {
+    console.log(`Found similar exercises: ${similarExercises.join(', ')}`);
+    return `
+I don't have specific instructions for "${exerciseName}", but here are some similar exercises you might be interested in:
+
+${similarExercises.map(name => `- ${name}`).join('\n')}
+
+Would you like to learn more about any of these?
+    `;
+  }
+  
   // No match found
+  console.log(`No match found for: ${exerciseName}`);
   return `I don't have specific instructions for "${exerciseName}". Try asking about common exercises like push-ups, squats, or planks. Or you can specify which muscle group you'd like to train, and I can suggest exercises for that area.`;
 };
 
@@ -182,6 +360,13 @@ ${exercise.description}
 #### Muscles Worked:
 Primary: ${exercise.muscleGroup}
 
+#### Proper Form:
+1. Start with proper setup - good posture and stable position
+2. Focus on the mind-muscle connection with the target muscles
+3. Use controlled movements through the full range of motion
+4. Breathe out during the exertion phase (when pushing/pulling)
+5. Maintain proper form throughout all repetitions
+
 #### Additional Info:
 This is a great exercise to include in your ${exercise.muscleGroup.toLowerCase()} training routine. Focus on proper form to get the most benefit and reduce injury risk.
 `;
@@ -199,7 +384,12 @@ ${exercise.description}
 - Reps: ${exercise.reps}
 - Rest: ${exercise.restTime} seconds
 
-I don't have detailed step-by-step instructions for this specific exercise, but you can find many tutorials online by searching for "${exercise.name} proper form".
+#### Proper Form:
+1. Maintain good posture throughout the exercise
+2. Focus on controlling the movement rather than using momentum
+3. Keep the target muscles engaged during the entire movement
+4. Use appropriate weight that allows you to maintain good form
+5. Ensure you're using a full range of motion for maximum benefit
 
 #### Muscles Worked:
 Primary: ${exercise.muscleGroup}

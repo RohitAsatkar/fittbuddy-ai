@@ -8,12 +8,14 @@ interface ChatContextProps {
   messages: ChatMessage[];
   sendMessage: (message: string) => void;
   clearChat: () => void;
+  isTyping: boolean;
 }
 
 const ChatContext = createContext<ChatContextProps | undefined>(undefined);
 
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [messages, setMessages] = useState<ChatMessage[]>(generateInitialChatHistory());
+  const [isTyping, setIsTyping] = useState(false);
   const { userProfile } = useUser();
 
   // Load chat history from localStorage
@@ -49,8 +51,9 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     };
     
     setMessages(prev => [...prev, userMessage]);
+    setIsTyping(true);
 
-    // Generate AI response
+    // Generate AI response with a realistic typing delay
     setTimeout(() => {
       const aiResponse = getAssistantResponse(content, userProfile || undefined);
       const assistantMessage: ChatMessage = {
@@ -61,7 +64,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       };
       
       setMessages(prev => [...prev, assistantMessage]);
-    }, 500); // Small delay to simulate thinking
+      setIsTyping(false);
+    }, 1500); // Longer delay to simulate thinking and typing
   };
 
   const clearChat = () => {
@@ -74,7 +78,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       value={{
         messages,
         sendMessage,
-        clearChat
+        clearChat,
+        isTyping
       }}
     >
       {children}

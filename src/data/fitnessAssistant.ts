@@ -4,66 +4,145 @@ import { getTipOfTheDay, motivationalQuotes } from "./tips";
 import { generateDietPlan } from "./dietPlans";
 import { getExerciseInstructions } from "./exerciseInstructions";
 import { generateMuscleGroupWorkout, generateWorkoutPlan } from "./workouts";
+import { getAllExercises, getExercisesByMuscleGroup } from "./exerciseDatabase";
 
 // Helper function to capitalize first letter
 const capitalizeFirstLetter = (string: string) => {
   return string.charAt(0).toUpperCase() + string.replace('_', ' ').slice(1);
 };
 
-// Updated assistant response logic
+// Improved function to extract exercise names from user messages
+const extractExerciseName = (message: string): string | null => {
+  const lowerMessage = message.toLowerCase();
+  
+  // Common exercise terms that might be present in queries
+  const exerciseTerms = [
+    "bench press", "push-up", "pushup", "push up", "squat", "plank", "lunge", "deadlift", 
+    "curl", "press", "pull-up", "pullup", "pull up", "row", "fly", "raise", "extension", 
+    "crunch", "sit-up", "situp", "sit up", "twist", "dip", "lateral raise", "overhead press",
+    "hammer curl", "skull crusher", "tricep extension", "calf raise", "leg press",
+    "chest fly", "incline press", "decline press", "military press", "shrug",
+    "face pull", "burpee", "jumping jack", "mountain climber", "russian twist",
+    "superman", "hyperextension", "back extension", "glute bridge", "hip thrust",
+    "good morning", "reverse fly", "lat pulldown", "bicep curl", "tricep pushdown",
+    "hanging leg raise", "bicycle crunch", "side plank", "step-up", "box jump",
+    "kettlebell swing", "kettlebell snatch", "kettlebell clean", "farmers walk",
+    "farmers carry", "sled push", "battle rope", "jump rope"
+  ];
+  
+  // Check for specific exercise names
+  for (const term of exerciseTerms) {
+    if (lowerMessage.includes(term)) {
+      return term;
+    }
+  }
+  
+  // Check for muscle group references
+  const muscleGroupKeywords = {
+    "chest": ["chest", "pectoral", "pecs"],
+    "back": ["back", "lats", "latissimus", "trapezius", "traps"],
+    "shoulders": ["shoulder", "delt", "deltoid"],
+    "arms": ["arm", "bicep", "tricep", "forearm"],
+    "core": ["core", "abs", "abdominal", "oblique"],
+    "legs": ["leg", "quad", "hamstring", "calf", "calves", "glute", "thigh"]
+  };
+  
+  for (const [group, keywords] of Object.entries(muscleGroupKeywords)) {
+    for (const keyword of keywords) {
+      if (lowerMessage.includes(keyword)) {
+        // Return the muscle group if specifically asking about exercises for that group
+        if (lowerMessage.includes(`${keyword} exercise`) || 
+            lowerMessage.includes(`exercise for ${keyword}`) ||
+            lowerMessage.includes(`${keyword} workout`)) {
+          return group;
+        }
+      }
+    }
+  }
+  
+  return null;
+};
+
+// Updated assistant response logic with improved exercise detection
 export const getAssistantResponse = (
   userMessage: string,
   userProfile?: UserProfile
 ): string => {
   const message = userMessage.toLowerCase();
-
-  // Improved exercise instructions matching - check first for any kind of exercise questions
+  console.log("Received message:", message);
+  
+  // First check if the message is asking about a specific exercise
   if (
     message.includes("exercise") || 
     message.includes("workout") || 
     message.includes("how to") || 
     message.includes("do") ||
-    message.includes("perform")
+    message.includes("perform") ||
+    message.includes("what is") ||
+    message.includes("tell me about")
   ) {
-    // Check specifically for exercise instructions
-    const potentialExerciseTerms = [
-      "bench press", "push-up", "pushup", "push up", "squat", "plank", "lunge", "deadlift", 
-      "curl", "press", "pull-up", "pullup", "row", "fly", "raise", "extension", "crunch", 
-      "twist", "dip", "chest", "back", "shoulder", "leg", "arm", "bicep", "tricep", "core", 
-      "abs", "glute", "lateral", "overhead", "bent", "hammer", "skull", "triceps", "dumbbell",
-      "barbell", "jumping"
-    ];
+    // Try to extract a specific exercise name from the message
+    const exerciseName = extractExerciseName(message);
+    console.log("Extracted exercise name:", exerciseName);
     
-    let targetExercise = "";
-    
-    // First try to identify a specific exercise name
-    for (const term of potentialExerciseTerms) {
-      if (message.includes(term)) {
-        // If message contains "how to do X" or similar patterns
-        if (
-          message.includes(`how to do ${term}`) || 
-          message.includes(`how to perform ${term}`) || 
-          message.includes(`how do i do ${term}`) ||
-          message.includes(`how to ${term}`)
-        ) {
-          targetExercise = term;
-          break;
-        }
-        // Check if it's a question about a specific exercise
-        if (message.includes(`what is ${term}`) || message.includes(`tell me about ${term}`)) {
-          targetExercise = term;
-          break;
-        }
-        // If direct exercise reference without specific question pattern
-        targetExercise = term;
+    if (exerciseName) {
+      // If we found an exercise term, return instructions for it
+      const exerciseInstructions = getExerciseInstructions(exerciseName);
+      
+      // If we got valid instructions (not a fallback message)
+      if (!exerciseInstructions.includes("I don't have specific instructions")) {
+        return exerciseInstructions;
       }
     }
-    
-    // If we found an exercise term, return instructions for it
-    if (targetExercise) {
-      console.log(`Found exercise query for: ${targetExercise}`);
-      return getExerciseInstructions(targetExercise);
+  }
+
+  // Check for muscle group exercise list requests
+  const muscleGroups = ["chest", "back", "legs", "shoulders", "arms", "core"];
+  let targetMuscle = null;
+  
+  for (const muscle of muscleGroups) {
+    if (message.includes(`${muscle} exercises`) || 
+        message.includes(`exercises for ${muscle}`) ||
+        message.includes(`${muscle} workout`) ||
+        message.includes(`workout for ${muscle}`)) {
+      targetMuscle = muscle;
+      break;
     }
+  }
+  
+  if (targetMuscle) {
+    const exercises = getExercisesByMuscleGroup(targetMuscle);
+    if (exercises.length > 0) {
+      return `
+### Top ${targetMuscle.charAt(0).toUpperCase() + targetMuscle.slice(1)} Exercises
+
+Here are some effective exercises for your ${targetMuscle}:
+
+${exercises.slice(0, 5).map((ex, i) => `${i+1}. **${ex.name}**: ${ex.description}\n   Sets: ${ex.sets}, Reps: ${ex.reps}, Rest: ${ex.restTime}s`).join('\n\n')}
+
+Would you like more detailed instructions for any of these exercises?
+      `;
+    }
+  }
+
+  // Check for exercise list request
+  if (message.includes("list exercises") || 
+      message.includes("show exercises") || 
+      message.includes("what exercises") ||
+      message.includes("all exercises")) {
+    
+    const exercises = getAllExercises();
+    const categories = [...new Set(exercises.map(ex => ex.muscleGroup))];
+    
+    return `
+### Exercise Categories
+
+Here are the main exercise categories:
+
+${categories.map(category => `- **${category}**`).join('\n')}
+
+Ask me about exercises for a specific muscle group like "Show me chest exercises" or ask for details about a specific exercise like "How to do a proper push-up".
+    `;
   }
 
   // Check for workout plan request for specific muscle group
@@ -166,7 +245,7 @@ export const getAssistantResponse = (
   }
 
   // Default response
-  return "I'm your FitBuddy AI assistant! I can help with workout plans, diet advice, or answer any fitness-related questions. What would you like to know about?";
+  return "I'm your FitBuddy AI assistant! I can help with workout plans, diet advice, or answer any fitness-related questions. Try asking me about specific exercises like \"How do I do a push-up?\" or \"What are good chest exercises?\"";
 };
 
 // Create sample chat history
@@ -174,7 +253,7 @@ export const generateInitialChatHistory = (): ChatMessage[] => {
   return [
     {
       id: "1",
-      content: "Hi there! I'm your FitBuddy AI assistant. How can I help with your fitness journey today?",
+      content: "Hi there! I'm your FitBuddy AI assistant. How can I help with your fitness journey today? Try asking me about specific exercises like \"How do I do a proper squat?\" or \"Show me some back exercises.\"",
       sender: "assistant",
       timestamp: new Date()
     }

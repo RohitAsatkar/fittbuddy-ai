@@ -9,7 +9,7 @@ import { getTipOfTheDay } from "@/data/tips";
 import { useUser } from "@/context/UserContext";
 
 export function ChatInterface() {
-  const { messages, sendMessage } = useChat();
+  const { messages, sendMessage, isTyping } = useChat();
   const { userProfile } = useUser();
   const [input, setInput] = useState("");
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -20,7 +20,7 @@ export function ChatInterface() {
     if (scrollAreaRef.current) {
       scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, isTyping]);
 
   // Focus the input when component mounts
   useEffect(() => {
@@ -98,6 +98,24 @@ export function ChatInterface() {
               </div>
             </div>
           ))}
+          
+          {/* Typing indicator */}
+          {isTyping && (
+            <div className="flex justify-start">
+              <div className="flex max-w-[80%] flex-row">
+                <Avatar className="h-8 w-8 mr-2 bg-fitness-purple text-white">
+                  <span className="text-xs">AI</span>
+                </Avatar>
+                <div className="rounded-lg p-3 bg-muted">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 rounded-full bg-fitness-purple-dark animate-bounce"></div>
+                    <div className="w-2 h-2 rounded-full bg-fitness-purple-dark animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+                    <div className="w-2 h-2 rounded-full bg-fitness-purple-dark animate-bounce" style={{ animationDelay: "0.4s" }}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </ScrollArea>
       
@@ -111,11 +129,13 @@ export function ChatInterface() {
           onKeyDown={handleKeyDown}
           placeholder="Type your message..."
           className="flex-1 bg-transparent border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-fitness-purple/60"
+          disabled={isTyping}
         />
         <Button 
           onClick={handleSend}
           className="ml-2 bg-fitness-purple hover:bg-fitness-purple-dark"
           size="icon"
+          disabled={isTyping}
         >
           <Send className="h-4 w-4" />
         </Button>
