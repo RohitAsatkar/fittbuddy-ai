@@ -1,3 +1,4 @@
+
 import { ChatMessage, FitnessGoal, UserProfile } from "@/types";
 import { getTipOfTheDay, motivationalQuotes } from "./tips";
 import { generateDietPlan } from "./dietPlans";
@@ -15,6 +16,55 @@ export const getAssistantResponse = (
   userProfile?: UserProfile
 ): string => {
   const message = userMessage.toLowerCase();
+
+  // Improved exercise instructions matching - check first for any kind of exercise questions
+  if (
+    message.includes("exercise") || 
+    message.includes("workout") || 
+    message.includes("how to") || 
+    message.includes("do") ||
+    message.includes("perform")
+  ) {
+    // Check specifically for exercise instructions
+    const potentialExerciseTerms = [
+      "bench press", "push-up", "pushup", "push up", "squat", "plank", "lunge", "deadlift", 
+      "curl", "press", "pull-up", "pullup", "row", "fly", "raise", "extension", "crunch", 
+      "twist", "dip", "chest", "back", "shoulder", "leg", "arm", "bicep", "tricep", "core", 
+      "abs", "glute", "lateral", "overhead", "bent", "hammer", "skull", "triceps", "dumbbell",
+      "barbell", "jumping"
+    ];
+    
+    let targetExercise = "";
+    
+    // First try to identify a specific exercise name
+    for (const term of potentialExerciseTerms) {
+      if (message.includes(term)) {
+        // If message contains "how to do X" or similar patterns
+        if (
+          message.includes(`how to do ${term}`) || 
+          message.includes(`how to perform ${term}`) || 
+          message.includes(`how do i do ${term}`) ||
+          message.includes(`how to ${term}`)
+        ) {
+          targetExercise = term;
+          break;
+        }
+        // Check if it's a question about a specific exercise
+        if (message.includes(`what is ${term}`) || message.includes(`tell me about ${term}`)) {
+          targetExercise = term;
+          break;
+        }
+        // If direct exercise reference without specific question pattern
+        targetExercise = term;
+      }
+    }
+    
+    // If we found an exercise term, return instructions for it
+    if (targetExercise) {
+      console.log(`Found exercise query for: ${targetExercise}`);
+      return getExerciseInstructions(targetExercise);
+    }
+  }
 
   // Check for workout plan request for specific muscle group
   if (
@@ -63,37 +113,6 @@ export const getAssistantResponse = (
     (message.includes("give") && message.includes("workout"))
   ) {
     return generateWorkoutPlan(userProfile);
-  }
-
-  // Check for exercise instructions
-  if (
-    message.includes("how to do") || 
-    message.includes("how to perform") || 
-    message.includes("instructions for") || 
-    (message.includes("how to") && message.includes("exercise")) ||
-    (message.includes("guide") && message.includes("exercise"))
-  ) {
-    // Extract exercise name
-    const messageParts = message.replace("?", "").split(" ");
-    const exercises = ["push-up", "pushup", "push up", "squat", "plank", "lunge", "deadlift", "curl", "press"];
-    
-    let targetExercise = "";
-    for (const part of messageParts) {
-      for (const exercise of exercises) {
-        if (part.includes(exercise)) {
-          targetExercise = exercise;
-          break;
-        }
-      }
-      if (targetExercise) break;
-    }
-    
-    // If no specific exercise found in our list, use the last few words
-    if (!targetExercise && messageParts.length > 3) {
-      targetExercise = messageParts.slice(Math.max(messageParts.length - 3, 0)).join(" ");
-    }
-    
-    return getExerciseInstructions(targetExercise);
   }
 
   // Check for diet/nutrition plan request

@@ -1,6 +1,7 @@
 
 import { Exercise } from "@/types";
 import { sampleWorkouts } from "./workouts";
+import { exerciseDatabase } from "./exerciseDatabase";
 
 interface ExerciseInstruction {
   name: string;
@@ -95,29 +96,43 @@ export const exerciseInstructions: Record<string, ExerciseInstruction> = {
 
 // Helper function to get exercise instructions
 export const getExerciseInstructions = (exerciseName: string) => {
-  // Look for an exact match first
+  // Convert exercise name to lowercase for case-insensitive matching
+  const searchTerm = exerciseName.toLowerCase();
+  
+  // Look for an exact match first in our detailed instructions
   const exactMatchKey = Object.keys(exerciseInstructions).find(
-    key => key.toLowerCase() === exerciseName.toLowerCase()
+    key => key.toLowerCase() === searchTerm
   );
   
   if (exactMatchKey) {
     return formatExerciseInstructions(exerciseInstructions[exactMatchKey]);
   }
   
-  // Look for partial matches
+  // Look for partial matches in our detailed instructions
   const partialMatchKey = Object.keys(exerciseInstructions).find(
-    key => exerciseName.toLowerCase().includes(key.toLowerCase()) || 
-          key.toLowerCase().includes(exerciseName.toLowerCase())
+    key => searchTerm.includes(key.toLowerCase()) || 
+          key.toLowerCase().includes(searchTerm)
   );
   
   if (partialMatchKey) {
     return formatExerciseInstructions(exerciseInstructions[partialMatchKey]);
   }
   
-  // Look in sample workouts if not found in exercise instructions
+  // Look in our exercise database
+  const databaseExercise = Object.values(exerciseDatabase).find(
+    ex => ex.name.toLowerCase().includes(searchTerm) || 
+          searchTerm.includes(ex.name.toLowerCase())
+  );
+  
+  if (databaseExercise) {
+    return formatDatabaseExercise(databaseExercise);
+  }
+  
+  // Look in sample workouts as a fallback
   const workoutExercise = sampleWorkouts
     .flatMap(w => w.exercises)
-    .find(ex => ex.name.toLowerCase().includes(exerciseName.toLowerCase()));
+    .find(ex => ex.name.toLowerCase().includes(searchTerm) || 
+               searchTerm.includes(ex.name.toLowerCase()));
   
   if (workoutExercise) {
     return formatWorkoutExercise(workoutExercise);
@@ -152,6 +167,26 @@ ${exercise.tips.map(tip => `• ${tip}`).join('\n')}
 `;
 };
 
+// Format exercise from our database
+const formatDatabaseExercise = (exercise: Exercise) => {
+  return `
+### ${exercise.name}
+
+${exercise.description}
+
+#### How to perform:
+- Sets: ${exercise.sets}
+- Reps: ${exercise.reps}
+- Rest: ${exercise.restTime} seconds
+
+#### Muscles Worked:
+Primary: ${exercise.muscleGroup}
+
+#### Additional Info:
+This is a great exercise to include in your ${exercise.muscleGroup.toLowerCase()} training routine. Focus on proper form to get the most benefit and reduce injury risk.
+`;
+};
+
 // Format workout exercise
 const formatWorkoutExercise = (exercise: Exercise) => {
   return `
@@ -170,4 +205,3 @@ I don't have detailed step-by-step instructions for this specific exercise, but 
 Primary: ${exercise.muscleGroup}
 `;
 };
-
