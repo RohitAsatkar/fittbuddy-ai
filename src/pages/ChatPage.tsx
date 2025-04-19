@@ -4,6 +4,8 @@ import { ChatInterface } from "@/components/chat-interface";
 import { ChatProvider } from "@/context/ChatContext";
 import { findRelevantQA } from "@/data/training";
 import { useEffect } from "react";
+import { extractExerciseName } from "@/utils/exerciseUtils";
+import { getExerciseInstructions } from "@/data/exerciseInstructions";
 
 export default function ChatPage() {
   // Add some debugging to help identify issues
@@ -14,7 +16,9 @@ export default function ChatPage() {
     const testQueries = [
       "How do I do push-ups?", 
       "What are good chest exercises?",
-      "Tell me about squats"
+      "Tell me about squats",
+      "How to use the hip abduction machine",
+      "What's the proper form for russian twists?"
     ];
     
     // Logging sample queries for debugging
@@ -22,6 +26,16 @@ export default function ChatPage() {
     testQueries.forEach(query => {
       const results = findRelevantQA(query);
       console.log(`Query: "${query}" - Found ${results.length} results`);
+      
+      // Test exercise extraction
+      const exerciseName = extractExerciseName(query);
+      console.log(`Exercise extraction: "${query}" -> ${exerciseName || "None found"}`);
+      
+      // Test if we can get instructions
+      if (exerciseName) {
+        const hasInstructions = getExerciseInstructions(exerciseName) ? "Found" : "Not found";
+        console.log(`Instructions for "${exerciseName}": ${hasInstructions}`);
+      }
     });
   }, []);
   
