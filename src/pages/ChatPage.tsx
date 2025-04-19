@@ -1,4 +1,3 @@
-
 import { NavBar } from "@/components/nav-bar";
 import { ChatInterface } from "@/components/chat-interface";
 import { ChatProvider } from "@/context/ChatContext";
@@ -6,45 +5,21 @@ import { findRelevantQA } from "@/data/training";
 import { useEffect } from "react";
 import { extractExerciseName } from "@/utils/exerciseUtils";
 import { getExerciseInstructions } from "@/data/exerciseInstructions";
+import { exerciseDatabase } from "@/data/exerciseDatabase";
+import { exerciseData } from "@/data/training/exerciseData";
 
 export default function ChatPage() {
-  // Add some debugging to help identify issues
   useEffect(() => {
     console.log("ChatPage mounted");
     
-    // Test exercise extraction
-    const testQueries = [
-      "How do I do push-ups?", 
-      "What are good chest exercises?",
-      "Tell me about squats",
-      "How to use the hip abduction machine",
-      "What's the proper form for russian twists?"
-    ];
+    // Log exercises from exercise database
+    const exerciseDatabaseCount = Object.keys(exerciseDatabase).length;
+    console.log(`Exercises in Exercise Database: ${exerciseDatabaseCount}`);
+    console.log("Exercise Database Exercises:", Object.values(exerciseDatabase).map(ex => ex.name));
     
-    // Logging sample queries for debugging
-    console.log("Sample query test results:");
-    testQueries.forEach(query => {
-      try {
-        const results = findRelevantQA(query);
-        console.log(`Query: "${query}" - Found ${results.length} results`);
-        
-        // Test exercise extraction
-        const exerciseName = extractExerciseName(query);
-        console.log(`Exercise extraction: "${query}" -> ${exerciseName || "None found"}`);
-        
-        // Test if we can get instructions - safely handle exerciseName being null
-        if (exerciseName) {
-          try {
-            const hasInstructions = getExerciseInstructions(exerciseName) ? "Found" : "Not found";
-            console.log(`Instructions for "${exerciseName}": ${hasInstructions}`);
-          } catch (err) {
-            console.error(`Error getting instructions for "${exerciseName}":`, err);
-          }
-        }
-      } catch (err) {
-        console.error(`Error processing test query "${query}":`, err);
-      }
-    });
+    // Log exercises from training data
+    console.log(`Exercises in Training Data: ${exerciseData.length}`);
+    console.log("Training Data Exercises:", exerciseData.map(ex => ex.name));
   }, []);
   
   return (
