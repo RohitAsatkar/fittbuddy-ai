@@ -1,4 +1,3 @@
-
 import { UserProfile } from "@/types";
 import { generateMuscleGroupWorkout, generateWorkoutPlan } from "@/data/workouts";
 import { getExerciseInstructions } from "@/data/exerciseInstructions";
@@ -7,6 +6,11 @@ import { extractExerciseName } from "@/utils/exerciseUtils";
 import { cleanupUserQuery, areExerciseNamesMatching } from "@/utils/stringUtils";
 
 export const handleWorkoutQuery = (message: string, userProfile?: UserProfile): string => {
+  if (!message) {
+    console.log("Empty message received in workout query handler");
+    return "";
+  }
+  
   const lowerMessage = cleanupUserQuery(message);
   console.log(`Processing workout query: "${lowerMessage}"`);
   
@@ -14,19 +18,22 @@ export const handleWorkoutQuery = (message: string, userProfile?: UserProfile): 
   const exerciseName = extractExerciseName(message);
   if (exerciseName) {
     console.log(`Found exercise in query: ${exerciseName}`);
-    const exerciseInstructions = getExerciseInstructions(exerciseName);
-    if (exerciseInstructions) {
-      return exerciseInstructions;
-    }
-    // If no specific instructions found, we'll try to find it in the database
-    const allExercises = getAllExercises();
-    const matchingExercise = allExercises.find(ex => 
-      areExerciseNamesMatching(ex.name, exerciseName)
-    );
-    
-    if (matchingExercise) {
-      console.log(`Found matching exercise in database: ${matchingExercise.name}`);
-      return `
+    try {
+      const exerciseInstructions = getExerciseInstructions(exerciseName);
+      if (exerciseInstructions) {
+        return exerciseInstructions;
+      }
+      
+      // If no specific instructions found, we'll try to find it in the database
+      const allExercises = getAllExercises();
+      if (allExercises && allExercises.length > 0) {
+        const matchingExercise = allExercises.find(ex => 
+          ex && ex.name && areExerciseNamesMatching(ex.name, exerciseName)
+        );
+        
+        if (matchingExercise) {
+          console.log(`Found matching exercise in database: ${matchingExercise.name}`);
+          return `
 ### ${matchingExercise.name}
 
 ${matchingExercise.description}
@@ -40,7 +47,11 @@ ${matchingExercise.description}
 Primary: ${matchingExercise.muscleGroup}
 
 This is a great exercise for strengthening your ${matchingExercise.muscleGroup}. Focus on proper form and controlled movements throughout the exercise.
-      `;
+          `;
+        }
+      }
+    } catch (err) {
+      console.error(`Error processing exercise "${exerciseName}":`, err);
     }
   }
 

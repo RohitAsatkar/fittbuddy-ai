@@ -24,17 +24,25 @@ export default function ChatPage() {
     // Logging sample queries for debugging
     console.log("Sample query test results:");
     testQueries.forEach(query => {
-      const results = findRelevantQA(query);
-      console.log(`Query: "${query}" - Found ${results.length} results`);
-      
-      // Test exercise extraction
-      const exerciseName = extractExerciseName(query);
-      console.log(`Exercise extraction: "${query}" -> ${exerciseName || "None found"}`);
-      
-      // Test if we can get instructions
-      if (exerciseName) {
-        const hasInstructions = getExerciseInstructions(exerciseName) ? "Found" : "Not found";
-        console.log(`Instructions for "${exerciseName}": ${hasInstructions}`);
+      try {
+        const results = findRelevantQA(query);
+        console.log(`Query: "${query}" - Found ${results.length} results`);
+        
+        // Test exercise extraction
+        const exerciseName = extractExerciseName(query);
+        console.log(`Exercise extraction: "${query}" -> ${exerciseName || "None found"}`);
+        
+        // Test if we can get instructions - safely handle exerciseName being null
+        if (exerciseName) {
+          try {
+            const hasInstructions = getExerciseInstructions(exerciseName) ? "Found" : "Not found";
+            console.log(`Instructions for "${exerciseName}": ${hasInstructions}`);
+          } catch (err) {
+            console.error(`Error getting instructions for "${exerciseName}":`, err);
+          }
+        }
+      } catch (err) {
+        console.error(`Error processing test query "${query}":`, err);
       }
     });
   }, []);
