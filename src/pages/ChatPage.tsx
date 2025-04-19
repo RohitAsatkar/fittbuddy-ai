@@ -2,7 +2,7 @@
 import { NavBar } from "@/components/nav-bar";
 import { ChatInterface } from "@/components/chat-interface";
 import { ChatProvider } from "@/context/ChatContext";
-import { findRelevantQA } from "@/data/aiCoachTraining";
+import { findRelevantQA } from "@/data/training";
 
 export default function ChatPage() {
   // Optional: You can add a test query to see if the training data works
