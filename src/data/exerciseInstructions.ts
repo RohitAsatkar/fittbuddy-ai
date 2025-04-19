@@ -1,3 +1,4 @@
+
 import { Exercise } from "@/types";
 import { sampleWorkouts } from "./workouts";
 import { exerciseDatabase } from "./exerciseDatabase";
@@ -404,3 +405,4 @@ ${exercise.description}
 #### Muscles Worked:
 Primary: ${exercise.muscleGroup}
 `;
+};
