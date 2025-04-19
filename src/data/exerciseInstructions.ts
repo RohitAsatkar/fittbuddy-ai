@@ -216,11 +216,6 @@ export const exerciseInstructions: Record<string, ExerciseInstruction> = {
 export const getExerciseInstructions = (exerciseName: string) => {
   console.log(`Searching for exercise instructions for: ${exerciseName}`);
   
-  if (!exerciseName) {
-    console.log('No exercise name provided');
-    return null;
-  }
-  
   const searchTerm = exerciseName.toLowerCase();
   
   const exactMatchKey = Object.keys(exerciseInstructions).find(
@@ -274,7 +269,7 @@ export const getExerciseInstructions = (exerciseName: string) => {
   if (matchedMuscleGroup) {
     console.log(`Identified as a muscle group search: ${matchedMuscleGroup}`);
     const muscleGroupExercises = Object.values(exerciseDatabase)
-      .filter(ex => ex && ex.muscleGroup && ex.muscleGroup.toLowerCase().includes(matchedMuscleGroup.toLowerCase()))
+      .filter(ex => ex.muscleGroup.toLowerCase().includes(matchedMuscleGroup.toLowerCase()))
       .slice(0, 5);
     
     if (muscleGroupExercises.length > 0) {
@@ -290,13 +285,10 @@ Would you like more detailed instructions for any of these exercises?
     }
   }
   
-  // Add null checks before accessing properties
-  const databaseExercise = Object.values(exerciseDatabase || {}).find(
-    ex => ex && (
-      (ex.name && ex.name.toLowerCase() === searchTerm) || 
-      (ex.name && searchTerm.includes(ex.name.toLowerCase())) || 
-      (ex.name && ex.name.toLowerCase().includes(searchTerm))
-    )
+  const databaseExercise = Object.values(exerciseDatabase).find(
+    ex => ex.name.toLowerCase() === searchTerm || 
+          searchTerm.includes(ex.name.toLowerCase()) || 
+          ex.name.toLowerCase().includes(searchTerm)
   );
   
   if (databaseExercise) {
@@ -304,31 +296,25 @@ Would you like more detailed instructions for any of these exercises?
     return formatDatabaseExercise(databaseExercise);
   }
   
-  // Add null checks for workout exercises
-  const allWorkouts = sampleWorkouts || [];
-  const workoutExercises = allWorkouts.flatMap(w => w?.exercises || []);
-  const workoutExercise = workoutExercises.find(ex => 
-    ex && ex.name && (
-      ex.name.toLowerCase() === searchTerm || 
-      searchTerm.includes(ex.name.toLowerCase()) || 
-      ex.name.toLowerCase().includes(searchTerm)
-    )
-  );
+  const workoutExercise = sampleWorkouts
+    .flatMap(w => w.exercises)
+    .find(ex => ex.name.toLowerCase() === searchTerm || 
+               searchTerm.includes(ex.name.toLowerCase()) || 
+               ex.name.toLowerCase().includes(searchTerm));
   
   if (workoutExercise) {
     console.log(`Found match in sample workouts: ${workoutExercise.name}`);
     return formatWorkoutExercise(workoutExercise);
   }
   
-  // Safely collect all exercise names with null checks
   const allExerciseNames = [
-    ...Object.keys(exerciseInstructions || {}).map(k => exerciseInstructions[k]?.name).filter(Boolean),
-    ...Object.values(exerciseDatabase || {}).map(ex => ex?.name).filter(Boolean)
+    ...Object.keys(exerciseInstructions).map(k => exerciseInstructions[k].name),
+    ...Object.values(exerciseDatabase).map(ex => ex.name)
   ];
   
   const searchWords = searchTerm.split(/\s+/);
   const similarExercises = allExerciseNames.filter(name => 
-    name && searchWords.some(word => 
+    searchWords.some(word => 
       name.toLowerCase().includes(word) && word.length > 3
     )
   ).slice(0, 3);
