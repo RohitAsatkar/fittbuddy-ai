@@ -14,7 +14,7 @@ const exerciseNames = [
   "extension", "tricep extension", "leg extension",
   "crunch", "sit-up", "situp", "sit up", "russian twist",
   "dip", "tricep dip", "chest dip",
-  "leg press", "calf raise", "leg curl",
+  "leg press", "calf raise", "calf raises", "leg curl", "hamstring curl",
   "face pull", "upright row", "shrug", 
   "burpee", "jumping jack", "mountain climber",
   "superman", "hyperextension", "back extension", 
@@ -27,6 +27,7 @@ const exerciseNames = [
 
 export const extractExerciseName = (message: string): string | null => {
   const lowerMessage = message.toLowerCase();
+  console.log(`Extracting exercise name from: "${lowerMessage}"`);
   
   // First check for exact matches
   for (const exercise of exerciseNames) {
@@ -42,7 +43,8 @@ export const extractExerciseName = (message: string): string | null => {
   // Check for "how to" patterns
   const howToPatterns = [
     "how to do ", "how to perform ", "how do i do ", 
-    "how to ", "show me how to do ", "tell me about "
+    "how to ", "show me how to do ", "tell me about ",
+    "what is ", "explain "
   ];
   
   for (const pattern of howToPatterns) {
@@ -52,7 +54,8 @@ export const extractExerciseName = (message: string): string | null => {
         for (const exercise of exerciseNames) {
           if (afterPattern.startsWith(exercise) || 
               afterPattern === exercise || 
-              exercise.startsWith(afterPattern)) {
+              exercise.startsWith(afterPattern) ||
+              afterPattern.includes(exercise)) {
             console.log(`Found exercise in how-to query: ${exercise}`);
             return exercise;
           }
@@ -92,5 +95,19 @@ export const extractExerciseName = (message: string): string | null => {
     }
   }
   
+  // Last attempt - check for single word matches
+  const messageWords = lowerMessage.split(/\s+/);
+  for (const word of messageWords) {
+    if (word.length > 3) { // Only check words longer than 3 chars
+      for (const exercise of exerciseNames) {
+        if (exercise.includes(word) || word === exercise) {
+          console.log(`Found word match: ${word} in ${exercise}`);
+          return exercise;
+        }
+      }
+    }
+  }
+  
+  console.log("No exercise name found in query");
   return null;
 };

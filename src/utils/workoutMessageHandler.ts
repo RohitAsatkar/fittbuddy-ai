@@ -3,37 +3,40 @@ import { UserProfile } from "@/types";
 import { generateMuscleGroupWorkout, generateWorkoutPlan } from "@/data/workouts";
 import { getExerciseInstructions } from "@/data/exerciseInstructions";
 import { getExercisesByMuscleGroup, getAllExercises } from "@/data/exerciseDatabase";
+import { extractExerciseName } from "@/utils/exerciseUtils";
+import { cleanupUserQuery } from "@/utils/stringUtils";
 
 export const handleWorkoutQuery = (message: string, userProfile?: UserProfile): string => {
-  const lowerMessage = message.toLowerCase();
-
-  // Check for specific exercise requests
-  if (message.includes("exercise") || 
-      message.includes("workout") || 
-      message.includes("how to") || 
-      message.includes("do") ||
-      message.includes("perform") ||
-      message.includes("what is") ||
-      message.includes("tell me about")) {
-    
-    // Try to extract a specific exercise name from the message
-    const muscleGroups = ["chest", "back", "legs", "shoulders", "arms", "core"];
-    let targetMuscle = null;
-    
-    for (const muscle of muscleGroups) {
-      if (lowerMessage.includes(`${muscle} exercises`) || 
-          lowerMessage.includes(`exercises for ${muscle}`) ||
-          lowerMessage.includes(`${muscle} workout`) ||
-          lowerMessage.includes(`workout for ${muscle}`)) {
-        targetMuscle = muscle;
-        break;
-      }
+  const lowerMessage = cleanupUserQuery(message);
+  
+  // First, check if there's a specific exercise being asked about
+  const exerciseName = extractExerciseName(message);
+  if (exerciseName) {
+    console.log(`Found exercise in query: ${exerciseName}`);
+    const exerciseInstructions = getExerciseInstructions(exerciseName);
+    if (exerciseInstructions) {
+      return exerciseInstructions;
     }
-    
-    if (targetMuscle) {
-      const exercises = getExercisesByMuscleGroup(targetMuscle);
-      if (exercises.length > 0) {
-        return `
+  }
+
+  // Check for muscle group exercises
+  const muscleGroups = ["chest", "back", "legs", "shoulders", "arms", "core"];
+  let targetMuscle = null;
+  
+  for (const muscle of muscleGroups) {
+    if (lowerMessage.includes(`${muscle} exercises`) || 
+        lowerMessage.includes(`exercises for ${muscle}`) ||
+        lowerMessage.includes(`${muscle} workout`) ||
+        lowerMessage.includes(`workout for ${muscle}`)) {
+      targetMuscle = muscle;
+      break;
+    }
+  }
+  
+  if (targetMuscle) {
+    const exercises = getExercisesByMuscleGroup(targetMuscle);
+    if (exercises.length > 0) {
+      return `
 ### Top ${targetMuscle.charAt(0).toUpperCase() + targetMuscle.slice(1)} Exercises
 
 Here are some effective exercises for your ${targetMuscle}:
@@ -41,9 +44,17 @@ Here are some effective exercises for your ${targetMuscle}:
 ${exercises.slice(0, 5).map((ex, i) => `${i+1}. **${ex.name}**: ${ex.description}\n   Sets: ${ex.sets}, Reps: ${ex.reps}, Rest: ${ex.restTime}s`).join('\n\n')}
 
 Would you like more detailed instructions for any of these exercises?
-        `;
-      }
+      `;
     }
+  }
+
+  // Check for "how to do" patterns
+  if (lowerMessage.includes("how to do") || 
+      lowerMessage.includes("how do i do") ||
+      lowerMessage.includes("how to perform") ||
+      lowerMessage.includes("show me how to")) {
+    // This is handled by extractExerciseName above, but adding extra logging
+    console.log("Detected 'how to' pattern but no specific exercise was identified");
   }
 
   // Check for exercise list request

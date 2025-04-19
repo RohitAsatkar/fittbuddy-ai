@@ -3,11 +3,27 @@ import { NavBar } from "@/components/nav-bar";
 import { ChatInterface } from "@/components/chat-interface";
 import { ChatProvider } from "@/context/ChatContext";
 import { findRelevantQA } from "@/data/training";
+import { useEffect } from "react";
 
 export default function ChatPage() {
-  // Optional: You can add a test query to see if the training data works
-  // const testResults = findRelevantQA("protein muscle");
-  // console.log("Test query results:", testResults);
+  // Add some debugging to help identify issues
+  useEffect(() => {
+    console.log("ChatPage mounted");
+    
+    // Test exercise extraction
+    const testQueries = [
+      "How do I do push-ups?", 
+      "What are good chest exercises?",
+      "Tell me about squats"
+    ];
+    
+    // Logging sample queries for debugging
+    console.log("Sample query test results:");
+    testQueries.forEach(query => {
+      const results = findRelevantQA(query);
+      console.log(`Query: "${query}" - Found ${results.length} results`);
+    });
+  }, []);
   
   return (
     <>
