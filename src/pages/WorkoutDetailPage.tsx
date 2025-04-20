@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getWorkoutById } from "@/data/workouts";
@@ -9,6 +8,7 @@ import { toast } from "@/components/ui/use-toast";
 import { useUser } from "@/context/UserContext";
 import { WorkoutHeader } from "@/components/workout-detail/workout-header";
 import { ExerciseList } from "@/components/workout-detail/exercise-list";
+import { WorkoutSequence } from "@/components/workout-detail/workout-sequence";
 import { FeedbackDialog } from "@/components/workout-detail/feedback-dialog";
 import { ArrowLeft, Dumbbell } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
@@ -22,6 +22,8 @@ export default function WorkoutDetailPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const workout = id ? getWorkoutById(id) : null;
+
+  const [isWorkoutStarted, setIsWorkoutStarted] = useState(false);
 
   if (!workout) {
     return (
@@ -45,6 +47,10 @@ export default function WorkoutDetailPage() {
 
   // Ensure that workout.exercises is always an array
   const exercises = workout.exercises || [];
+
+  const handleStartWorkout = () => {
+    setIsWorkoutStarted(true);
+  };
 
   const handleCompleteWorkout = () => {
     setIsFeedbackDialogOpen(true);
@@ -90,18 +96,26 @@ export default function WorkoutDetailPage() {
         </Button>
         
         <WorkoutHeader workout={workout} />
-        <ExerciseList exercises={exercises} />
         
-        <div className="sticky bottom-20 md:bottom-4 bg-white p-4 border-t md:border rounded-lg shadow-md">
-          <Button 
-            onClick={handleCompleteWorkout} 
-            disabled={isWorkoutComplete}
-            className="w-full bg-fitness-purple hover:bg-fitness-purple-dark"
-            size="lg"
-          >
-            {isWorkoutComplete ? "Workout Completed!" : "Complete Workout"}
-          </Button>
-        </div>
+        {!isWorkoutStarted ? (
+          <>
+            <ExerciseList exercises={exercises} />
+            <div className="sticky bottom-20 md:bottom-4 bg-white p-4 border-t md:border rounded-lg shadow-md">
+              <Button 
+                onClick={handleStartWorkout}
+                className="w-full bg-fitness-purple hover:bg-fitness-purple-dark"
+                size="lg"
+              >
+                Start Workout
+              </Button>
+            </div>
+          </>
+        ) : (
+          <WorkoutSequence 
+            exercises={exercises}
+            onComplete={handleCompleteWorkout}
+          />
+        )}
 
         <FeedbackDialog
           open={isFeedbackDialogOpen}
