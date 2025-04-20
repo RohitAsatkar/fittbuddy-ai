@@ -3,67 +3,79 @@ import { UserProfile } from "@/types";
 import { generateMuscleGroupWorkout, generateWorkoutPlan } from "@/data/workouts";
 import { getExerciseInstructions } from "@/data/exerciseInstructions";
 import { getExercisesByMuscleGroup, getAllExercises } from "@/data/exerciseDatabase";
+import { extractExerciseName } from "@/utils/exerciseUtils";
 
 export const handleWorkoutQuery = (message: string, userProfile?: UserProfile): string => {
   const lowerMessage = message.toLowerCase();
 
-  // Check for specific exercise requests
-  if (message.includes("exercise") || 
-      message.includes("workout") || 
-      message.includes("how to") || 
-      message.includes("do") ||
-      message.includes("perform") ||
-      message.includes("what is") ||
-      message.includes("tell me about")) {
-    
-    // Try to extract a specific exercise name from the message
-    const muscleGroups = ["chest", "back", "legs", "shoulders", "arms", "core"];
-    let targetMuscle = null;
-    
-    for (const muscle of muscleGroups) {
-      if (lowerMessage.includes(`${muscle} exercises`) || 
-          lowerMessage.includes(`exercises for ${muscle}`) ||
-          lowerMessage.includes(`${muscle} workout`) ||
-          lowerMessage.includes(`workout for ${muscle}`)) {
-        targetMuscle = muscle;
-        break;
-      }
+  // First try to extract a specific exercise name
+  const exerciseName = extractExerciseName(message);
+  if (exerciseName) {
+    const instructions = getExerciseInstructions(exerciseName);
+    if (instructions) return instructions;
+  }
+
+  // Check for muscle group specific queries
+  const muscleGroups = ["chest", "back", "legs", "shoulders", "arms", "core"];
+  let targetMuscle = null;
+  
+  for (const muscle of muscleGroups) {
+    if (lowerMessage.includes(`${muscle} exercises`) || 
+        lowerMessage.includes(`exercises for ${muscle}`) ||
+        lowerMessage.includes(`${muscle} workout`) ||
+        lowerMessage.includes(`workout for ${muscle}`)) {
+      targetMuscle = muscle;
+      break;
     }
-    
-    if (targetMuscle) {
-      const exercises = getExercisesByMuscleGroup(targetMuscle);
-      if (exercises.length > 0) {
-        return `
-### Top ${targetMuscle.charAt(0).toUpperCase() + targetMuscle.slice(1)} Exercises
+  }
+  
+  if (targetMuscle) {
+    const exercises = getExercisesByMuscleGroup(targetMuscle);
+    if (exercises.length > 0) {
+      return `
+### ${targetMuscle.charAt(0).toUpperCase() + targetMuscle.slice(1)} Exercises
 
 Here are some effective exercises for your ${targetMuscle}:
 
-${exercises.slice(0, 5).map((ex, i) => `${i+1}. **${ex.name}**: ${ex.description}\n   Sets: ${ex.sets}, Reps: ${ex.reps}, Rest: ${ex.restTime}s`).join('\n\n')}
+${exercises.map((ex, i) => `
+${i+1}. **${ex.name}**
+   ${ex.description}
+   - Sets: ${ex.sets}
+   - Reps: ${ex.reps}
+   - Rest: ${ex.restTime}s
+`).join('\n')}
 
-Would you like more detailed instructions for any of these exercises?
-        `;
-      }
+Would you like detailed instructions for any of these exercises? Just ask me "How to do [exercise name]" or "Show me proper form for [exercise name]".
+      `;
     }
   }
 
-  // Check for exercise list request
-  if (lowerMessage.includes("list exercises") || 
-      lowerMessage.includes("show exercises") || 
-      lowerMessage.includes("what exercises") ||
-      lowerMessage.includes("all exercises")) {
+  // Handle general exercise queries
+  if (lowerMessage.includes("exercise") || 
+      lowerMessage.includes("workout") || 
+      lowerMessage.includes("training")) {
     
-    const exercises = getAllExercises();
-    const categories = [...new Set(exercises.map(ex => ex.muscleGroup))];
-    
-    return `
+    if (lowerMessage.includes("list") || 
+        lowerMessage.includes("show") || 
+        lowerMessage.includes("what") ||
+        lowerMessage.includes("all")) {
+      
+      const exercises = getAllExercises();
+      const categories = [...new Set(exercises.map(ex => ex.muscleGroup))];
+      
+      return `
 ### Exercise Categories
 
-Here are the main exercise categories:
+Here are all the muscle groups you can train:
 
-${categories.map(category => `- **${category}**`).join('\n')}
+${categories.map(category => `- **${category.charAt(0).toUpperCase() + category.slice(1)}**`).join('\n')}
 
-Ask me about exercises for a specific muscle group like "Show me chest exercises" or ask for details about a specific exercise like "How to do a proper push-up".
-    `;
+You can ask me:
+- "Show me [muscle group] exercises" for exercises targeting a specific muscle group
+- "How to do [exercise name]" for detailed instructions on any exercise
+- "Give me a workout plan" for a personalized workout plan
+      `;
+    }
   }
 
   // Check for workout plan requests
