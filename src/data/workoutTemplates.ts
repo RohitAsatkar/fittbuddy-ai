@@ -1,5 +1,160 @@
 import { Workout, WorkoutDifficulty, WorkoutType } from "@/types";
-import { exercises } from "./exercises";
+import { exerciseDatabase } from "./exerciseDatabase";
+
+// Get exercises from the database
+const getExercise = (id: string) => {
+  return exerciseDatabase[id] || null;
+};
+
+// Create safe exercise references
+const safeExercises = {
+  // Core exercises
+  plank: getExercise("core-3") || {
+    id: "core-3",
+    name: "Planks",
+    description: "Hold a push-up position with body weight on forearms and toes, maintaining straight body alignment.",
+    sets: 3,
+    reps: "30-60 seconds",
+    restTime: 45,
+    muscleGroup: "core"
+  },
+  
+  russianTwists: getExercise("core-5") || {
+    id: "core-5",
+    name: "Russian Twists",
+    description: "Sit with knees bent and torso leaned back slightly. Rotate torso to tap floor on each side, optionally holding weight.",
+    sets: 3,
+    reps: "20 (10 each side)",
+    restTime: 45,
+    muscleGroup: "core"
+  },
+  
+  // Leg exercises
+  squats: getExercise("lower-1") || {
+    id: "lower-1",
+    name: "Squats",
+    description: "Stand with feet shoulder-width apart, lower body by bending knees and hips as if sitting in a chair, then return to standing.",
+    sets: 4,
+    reps: "8-10",
+    restTime: 90,
+    muscleGroup: "legs"
+  },
+  
+  lunges: getExercise("lower-5") || {
+    id: "lower-5",
+    name: "Bulgarian Split Squats",
+    description: "Stand with one foot elevated behind you on bench. Lower body by bending front knee, then push back up.",
+    sets: 3,
+    reps: "8-10 per leg",
+    restTime: 60,
+    muscleGroup: "legs"
+  },
+  
+  gluteBridge: getExercise("lower-4") || {
+    id: "lower-4",
+    name: "Hip Thrusts",
+    description: "Sit with upper back against bench, barbell across hips. Drive hips upward until body forms straight line from shoulders to knees.",
+    sets: 4,
+    reps: "10-12",
+    restTime: 90,
+    muscleGroup: "legs"
+  },
+  
+  jumpingJacks: {
+    id: "cardio-1",
+    name: "Jumping Jacks",
+    description: "Stand with feet together and arms at sides, then jump while spreading legs and raising arms overhead.",
+    sets: 3,
+    reps: "30 seconds",
+    restTime: 30,
+    muscleGroup: "cardio"
+  },
+  
+  // Arm exercises
+  bicepCurls: getExercise("arm-1") || {
+    id: "arm-1",
+    name: "Bicep Curls",
+    description: "Stand holding weights at sides with palms forward. Curl weights toward shoulders while keeping elbows fixed at sides.",
+    sets: 3,
+    reps: "10-12",
+    restTime: 60,
+    muscleGroup: "arms"
+  },
+  
+  tricepDips: getExercise("arm-4") || {
+    id: "arm-4",
+    name: "Triceps Dips",
+    description: "On parallel bars or bench, lower body by bending arms until elbows reach 90 degrees, then push back up.",
+    sets: 3,
+    reps: "10-12",
+    restTime: 60,
+    muscleGroup: "arms"
+  },
+  
+  // Chest exercises
+  pushups: getExercise("chest-2") || {
+    id: "chest-2",
+    name: "Push-ups",
+    description: "Start in a plank position with hands slightly wider than shoulders. Lower your body until chest nearly touches the floor, then push back up.",
+    sets: 3,
+    reps: "12-20",
+    restTime: 60,
+    muscleGroup: "chest"
+  },
+  
+  // Back exercises
+  bentOverRows: getExercise("back-3") || {
+    id: "back-3",
+    name: "Rows",
+    description: "Bend at hips with flat back, pull weight toward lower chest/abdomen, keeping elbows close to body.",
+    sets: 4,
+    reps: "10-12",
+    restTime: 60,
+    muscleGroup: "back"
+  },
+  
+  // Shoulder exercises
+  shoulderPress: getExercise("shoulder-1") || {
+    id: "shoulder-1",
+    name: "Overhead Press",
+    description: "Stand with feet shoulder-width apart, press barbell or dumbbells from shoulder level to overhead.",
+    sets: 3,
+    reps: "8-10",
+    restTime: 90,
+    muscleGroup: "shoulders"
+  },
+  
+  // Additional cardio
+  burpees: {
+    id: "cardio-2",
+    name: "Burpees",
+    description: "Begin in standing position, drop to squat position, kick feet back to plank position, return to squat position, then jump up.",
+    sets: 3,
+    reps: "10-15",
+    restTime: 60,
+    muscleGroup: "cardio"
+  },
+  
+  mountainClimbers: {
+    id: "cardio-3",
+    name: "Mountain Climbers",
+    description: "Start in plank position, rapidly alternate bringing knees to chest, keeping hips down and core engaged.",
+    sets: 3,
+    reps: "30 seconds",
+    restTime: 30,
+    muscleGroup: "cardio"
+  },
+  
+  jumpRope: {
+    id: "cardio-4",
+    name: "Jump Rope",
+    description: "Jump rope with both feet together or alternating feet, maintaining a steady rhythm.",
+    sets: 3,
+    reps: "60 seconds",
+    restTime: 45,
+    muscleGroup: "cardio"
+  }
+};
 
 // Sample workouts
 export const sampleWorkouts: Workout[] = [
@@ -12,11 +167,11 @@ export const sampleWorkouts: Workout[] = [
     duration: 30,
     caloriesBurn: 200,
     exercises: [
-      exercises.jumpingJacks,
-      exercises.pushups,
-      exercises.squats,
-      exercises.plank,
-      exercises.tricepDips
+      safeExercises.jumpingJacks,
+      safeExercises.pushups,
+      safeExercises.squats,
+      safeExercises.plank,
+      safeExercises.tricepDips
     ],
     targetMuscleGroups: ["full body", "chest", "legs", "core", "arms"]
   },
@@ -29,11 +184,11 @@ export const sampleWorkouts: Workout[] = [
     duration: 25,
     caloriesBurn: 300,
     exercises: [
-      exercises.jumpingJacks,
-      exercises.burpees,
-      exercises.mountainClimbers,
-      exercises.jumpRope,
-      exercises.squats
+      safeExercises.jumpingJacks,
+      safeExercises.burpees,
+      safeExercises.mountainClimbers,
+      safeExercises.jumpRope,
+      safeExercises.squats
     ],
     targetMuscleGroups: ["full body", "cardio", "legs", "core"]
   },
@@ -46,11 +201,11 @@ export const sampleWorkouts: Workout[] = [
     duration: 45,
     caloriesBurn: 250,
     exercises: [
-      exercises.pushups,
-      exercises.bicepCurls,
-      exercises.tricepDips,
-      exercises.shoulderPress,
-      exercises.bentOverRows
+      safeExercises.pushups,
+      safeExercises.bicepCurls,
+      safeExercises.tricepDips,
+      safeExercises.shoulderPress,
+      safeExercises.bentOverRows
     ],
     targetMuscleGroups: ["chest", "arms", "shoulders", "back"]
   },
@@ -63,11 +218,11 @@ export const sampleWorkouts: Workout[] = [
     duration: 40,
     caloriesBurn: 280,
     exercises: [
-      exercises.squats,
-      exercises.lunges,
-      exercises.gluteBridge,
-      exercises.jumpingJacks,
-      exercises.plank
+      safeExercises.squats,
+      safeExercises.lunges,
+      safeExercises.gluteBridge,
+      safeExercises.jumpingJacks,
+      safeExercises.plank
     ],
     targetMuscleGroups: ["legs", "glutes", "core"]
   },
@@ -80,11 +235,11 @@ export const sampleWorkouts: Workout[] = [
     duration: 30,
     caloriesBurn: 220,
     exercises: [
-      exercises.plank,
-      exercises.mountainClimbers,
-      exercises.russianTwists,
-      exercises.gluteBridge,
-      exercises.burpees
+      safeExercises.plank,
+      safeExercises.mountainClimbers,
+      safeExercises.russianTwists,
+      safeExercises.gluteBridge,
+      safeExercises.burpees
     ],
     targetMuscleGroups: ["core", "abs", "lower back"]
   },
@@ -97,10 +252,10 @@ export const sampleWorkouts: Workout[] = [
     duration: 15,
     caloriesBurn: 150,
     exercises: [
-      exercises.jumpingJacks,
-      exercises.pushups,
-      exercises.squats,
-      exercises.plank
+      safeExercises.jumpingJacks,
+      safeExercises.pushups,
+      safeExercises.squats,
+      safeExercises.plank
     ],
     targetMuscleGroups: ["full body"]
   },
@@ -113,13 +268,13 @@ export const sampleWorkouts: Workout[] = [
     duration: 60,
     caloriesBurn: 450,
     exercises: [
-      exercises.burpees,
-      exercises.pushups,
-      exercises.squats,
-      exercises.bicepCurls,
-      exercises.tricepDips,
-      exercises.shoulderPress,
-      exercises.bentOverRows
+      safeExercises.burpees,
+      safeExercises.pushups,
+      safeExercises.squats,
+      safeExercises.bicepCurls,
+      safeExercises.tricepDips,
+      safeExercises.shoulderPress,
+      safeExercises.bentOverRows
     ],
     targetMuscleGroups: ["full body", "chest", "legs", "arms", "shoulders", "back"]
   }

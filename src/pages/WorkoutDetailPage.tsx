@@ -43,6 +43,9 @@ export default function WorkoutDetailPage() {
     );
   }
 
+  // Ensure that workout.exercises is always an array
+  const exercises = workout.exercises || [];
+
   const handleCompleteWorkout = () => {
     setIsFeedbackDialogOpen(true);
   };
@@ -87,7 +90,7 @@ export default function WorkoutDetailPage() {
         </Button>
         
         <WorkoutHeader workout={workout} />
-        <ExerciseList exercises={workout.exercises} />
+        <ExerciseList exercises={exercises} />
         
         <div className="sticky bottom-20 md:bottom-4 bg-white p-4 border-t md:border rounded-lg shadow-md">
           <Button 
