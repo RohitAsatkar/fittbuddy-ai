@@ -1,4 +1,3 @@
-
 import { useUser } from "@/context/UserContext";
 import { 
   BarChart as BarChartIcon, 
@@ -284,7 +283,7 @@ export function ProgressChart({ timeframe, metricType }: ProgressChartProps) {
               ) : timeframe === "weekly" ? (
                 <BarChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey={timeframe === "all" ? "month" : "day"} />
+                  <XAxis dataKey="day" />
                   <YAxis />
                   <Tooltip formatter={(value) => [`${value} ${chartProps.label}`, 'Total']} />
                   <Bar dataKey={chartProps.dataKey} name={chartProps.label} fill={chartProps.fill} radius={[4, 4, 0, 0]} />
