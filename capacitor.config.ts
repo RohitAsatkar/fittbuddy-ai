@@ -10,7 +10,7 @@ const config: CapacitorConfig = {
     cleartext: true
   },
   plugins: {
-    // Reserved for future motion plugin configuration
+    // This is where we'll configure additional plugin settings when needed
   }
 };
 

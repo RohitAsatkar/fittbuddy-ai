@@ -31,7 +31,7 @@ export function StepCounter() {
     };
   }, []);
   
-  const handleToggleTracking = () => {
+  const handleToggleTracking = async () => {
     const stepService = StepTrackingService.getInstance();
     
     if (isTracking) {
@@ -42,12 +42,25 @@ export function StepCounter() {
         description: "Your steps are no longer being tracked"
       });
     } else {
-      stepService.startTracking();
-      setIsTracking(true);
-      toast({
-        title: "Step tracking started",
-        description: "Your steps are now being tracked"
-      });
+      try {
+        await stepService.startTracking();
+        setIsTracking(true);
+        toast({
+          title: "Step tracking started",
+          description: "Your steps are now being tracked"
+        });
+      } catch (error) {
+        console.error("Error starting step tracking:", error);
+        toast({
+          title: "Step tracking error",
+          description: "Could not activate step tracking. Using simulation mode.",
+          variant: "destructive"
+        });
+        
+        // Fall back to simulation if real tracking fails
+        stepService.startSimulation();
+        setIsTracking(true);
+      }
     }
   };
   

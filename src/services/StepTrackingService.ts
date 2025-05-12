@@ -14,6 +14,11 @@ export class StepTrackingService {
   private simulationInterval: number | null = null;
   private stepListeners: Array<StepListener> = [];
   private isUsingRealSensor: boolean = false;
+  private accelerometerWatchId: string | null = null;
+  private lastAcceleration: { x: number, y: number, z: number } | null = null;
+  private stepThreshold: number = 10; // Adjust based on testing
+  private lastStepTime: number = 0;
+  private stepCooldown: number = 300; // ms between potential steps
 
   private constructor() {
     this.loadStepData();
@@ -26,19 +31,95 @@ export class StepTrackingService {
     return StepTrackingService.instance;
   }
 
-  public startTracking(): void {
-    // For now, we'll always use simulation
-    // Later, this will check if real sensors are available
-    this.startSimulation();
+  public async startTracking(): Promise<void> {
+    try {
+      // Check if we're running in a Capacitor environment (mobile device)
+      if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+        await this.startDeviceSensors();
+      } else {
+        // Fall back to simulation if not on a device or sensors unavailable
+        console.log("Using step simulation (not on mobile device)");
+        this.startSimulation();
+      }
+    } catch (error) {
+      console.error("Failed to start device sensors:", error);
+      console.log("Falling back to step simulation mode");
+      this.startSimulation();
+    }
   }
 
   public stopTracking(): void {
     if (this.isUsingRealSensor) {
-      // This will be used later for removing real sensor listeners
-      this.isUsingRealSensor = false;
+      this.stopDeviceSensors();
     } else {
       this.stopSimulation();
     }
+  }
+
+  private async startDeviceSensors(): Promise<void> {
+    try {
+      // This is where we would initialize device motion sensors
+      // For now, we'll use a basic approach that just uses the Capacitor API
+      // but can be extended later with other plugins
+      
+      const motion = window.Capacitor?.Plugins?.Motion;
+      
+      if (!motion) {
+        throw new Error("Motion plugin not available");
+      }
+      
+      // Start the accelerometer
+      await motion.addListener('accel', (event: any) => {
+        this.processAccelerometerData(event.acceleration);
+      });
+      
+      this.isUsingRealSensor = true;
+      console.log('Device motion sensors activated');
+    } catch (error) {
+      console.error("Error starting device sensors:", error);
+      throw error;
+    }
+  }
+
+  private stopDeviceSensors(): void {
+    try {
+      // Remove device motion listeners
+      if (window.Capacitor?.Plugins?.Motion) {
+        window.Capacitor.Plugins.Motion.removeAllListeners();
+      }
+      
+      this.isUsingRealSensor = false;
+      console.log('Device motion sensors deactivated');
+    } catch (error) {
+      console.error("Error stopping device sensors:", error);
+    }
+  }
+
+  private processAccelerometerData(acceleration: { x: number, y: number, z: number }): void {
+    const now = Date.now();
+    
+    // Skip if we're still in the cooldown period between steps
+    if (now - this.lastStepTime < this.stepCooldown) {
+      return;
+    }
+    
+    if (this.lastAcceleration) {
+      // Calculate the magnitude of change in acceleration
+      const deltaX = Math.abs(acceleration.x - this.lastAcceleration.x);
+      const deltaY = Math.abs(acceleration.y - this.lastAcceleration.y);
+      const deltaZ = Math.abs(acceleration.z - this.lastAcceleration.z);
+      
+      // Calculate total magnitude (simplified approach)
+      const magnitudeChange = Math.sqrt(deltaX*deltaX + deltaY*deltaY + deltaZ*deltaZ);
+      
+      // Detect step based on acceleration pattern
+      if (magnitudeChange > this.stepThreshold) {
+        this.lastStepTime = now;
+        this.addSteps(1);
+      }
+    }
+    
+    this.lastAcceleration = acceleration;
   }
 
   public startSimulation(): void {
@@ -173,5 +254,20 @@ export class StepTrackingService {
     }
     
     return history.reverse(); // Return with oldest first
+  }
+}
+
+// Add a declaration to make TypeScript happy with window.Capacitor
+declare global {
+  interface Window {
+    Capacitor?: {
+      isNativePlatform: () => boolean;
+      Plugins?: {
+        Motion?: {
+          addListener: (event: string, callback: (data: any) => void) => Promise<void>;
+          removeAllListeners: () => Promise<void>;
+        };
+      };
+    };
   }
 }
