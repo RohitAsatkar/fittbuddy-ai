@@ -54,6 +54,153 @@ export function ProgressChart({ timeframe, metricType }: ProgressChartProps) {
     }
   }, [timeframe, metricType]);
 
+  // Always declare chartData with useMemo before any conditional returns
+  const chartData = useMemo(() => {
+    // Only calculate chart data for non-step metrics when we have completed workouts
+    if (metricType !== "steps" && completedWorkouts.length > 0) {
+      // Filter workouts based on timeframe
+      const now = new Date();
+      let filteredWorkouts = [...completedWorkouts];
+      
+      if (timeframe === "weekly") {
+        const oneWeekAgo = new Date(now);
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        filteredWorkouts = completedWorkouts.filter(workout => 
+          new Date(workout.date) >= oneWeekAgo
+        );
+      } else if (timeframe === "monthly") {
+        const oneMonthAgo = new Date(now);
+        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+        filteredWorkouts = completedWorkouts.filter(workout => 
+          new Date(workout.date) >= oneMonthAgo
+        );
+      }
+
+      // Group and format data based on metric type
+      if (metricType === "muscles") {
+        // For muscle groups, we need a pie chart of most trained muscle groups
+        const muscleGroups: Record<string, number> = {};
+        
+        filteredWorkouts.forEach(workout => {
+          const workoutDetails = userProfile?.workoutsCompleted > 0 ? 
+            { targetMuscleGroups: ["Full Body"] } : { targetMuscleGroups: [] };
+          
+          workoutDetails.targetMuscleGroups.forEach(group => {
+            if (!muscleGroups[group]) muscleGroups[group] = 0;
+            muscleGroups[group]++;
+          });
+        });
+        
+        return Object.entries(muscleGroups).map(([name, value]) => ({ name, value }));
+      } else {
+        // For other metrics, prepare time series data
+        let groupedData: Record<string, any> = {};
+        
+        if (timeframe === "weekly") {
+          // Group by day of week
+          const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+          days.forEach(day => {
+            groupedData[day] = { day, count: 0, calories: 0, duration: 0 };
+          });
+          
+          filteredWorkouts.forEach(workout => {
+            const day = days[new Date(workout.date).getDay()];
+            groupedData[day].count++;
+            groupedData[day].calories += 300; // Placeholder value
+            groupedData[day].duration += workout.duration;
+          });
+          
+          return Object.values(groupedData);
+        } else if (timeframe === "monthly") {
+          // Group by date within the month
+          filteredWorkouts.forEach(workout => {
+            const date = new Date(workout.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            if (!groupedData[date]) {
+              groupedData[date] = { date, count: 0, calories: 0, duration: 0 };
+            }
+            groupedData[date].count++;
+            groupedData[date].calories += 300; // Placeholder value
+            groupedData[date].duration += workout.duration;
+          });
+          
+          return Object.values(groupedData);
+        } else {
+          // All time - group by month
+          filteredWorkouts.forEach(workout => {
+            const month = new Date(workout.date).toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+            if (!groupedData[month]) {
+              groupedData[month] = { month, count: 0, calories: 0, duration: 0 };
+            }
+            groupedData[month].count++;
+            groupedData[month].calories += 300; // Placeholder value
+            groupedData[month].duration += workout.duration;
+          });
+          
+          return Object.values(groupedData);
+        }
+      }
+    }
+    
+    // Return empty array as fallback
+    return [];
+  }, [completedWorkouts, timeframe, metricType, userProfile]);
+
+  // Define chartProps outside any conditional blocks to avoid hook ordering issues
+  const chartProps = useMemo(() => {
+    switch (metricType) {
+      case "workouts":
+        return {
+          title: "Workout Frequency",
+          description: `Number of workouts completed ${timeframe === "weekly" ? "this week" : timeframe === "monthly" ? "this month" : "all time"}`,
+          dataKey: "count",
+          fill: "#9b87f5",
+          label: "Workouts"
+        };
+      case "calories":
+        return {
+          title: "Calories Burned",
+          description: `Estimated calories burned ${timeframe === "weekly" ? "this week" : timeframe === "monthly" ? "this month" : "all time"}`,
+          dataKey: "calories",
+          fill: "#F97316",
+          label: "Calories"
+        };
+      case "duration":
+        return {
+          title: "Workout Duration",
+          description: `Total workout time ${timeframe === "weekly" ? "this week" : timeframe === "monthly" ? "this month" : "all time"}`,
+          dataKey: "duration",
+          fill: "#10B981",
+          label: "Minutes"
+        };
+      case "muscles":
+        return {
+          title: "Muscle Groups Trained",
+          description: `Distribution of muscle groups trained ${timeframe === "weekly" ? "this week" : timeframe === "monthly" ? "this month" : "all time"}`,
+          dataKey: "value",
+          nameKey: "name",
+          label: "Sessions"
+        };
+      default:
+        return {
+          title: "Workout Frequency",
+          description: `Number of workouts completed ${timeframe === "weekly" ? "this week" : timeframe === "monthly" ? "this month" : "all time"}`,
+          dataKey: "count",
+          fill: "#9b87f5",
+          label: "Workouts"
+        };
+    }
+  }, [timeframe, metricType]);
+  
+  // Stats cards - declare before any conditional returns
+  const statsData = useMemo(() => ({
+    totalWorkouts: userProfile?.workoutsCompleted || 0,
+    streakDays: userProfile?.streakDays || 0,
+    lastWorkoutDate: userProfile?.lastWorkoutDate ? 
+      new Date(userProfile.lastWorkoutDate).toLocaleDateString() : "Never",
+    fitnessGoal: userProfile?.fitnessGoal?.replace("_", " ") || "Not set"
+  }), [userProfile]);
+
+  // Now we can handle conditional rendering
   if (!userProfile) {
     return (
       <EmptyState
@@ -185,148 +332,6 @@ export function ProgressChart({ timeframe, metricType }: ProgressChartProps) {
       />
     );
   }
-
-  // Prepare chart data based on timeframe and metric type
-  const chartData = useMemo(() => {
-    // Filter workouts based on timeframe
-    const now = new Date();
-    let filteredWorkouts = [...completedWorkouts];
-    
-    if (timeframe === "weekly") {
-      const oneWeekAgo = new Date(now);
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-      filteredWorkouts = completedWorkouts.filter(workout => 
-        new Date(workout.date) >= oneWeekAgo
-      );
-    } else if (timeframe === "monthly") {
-      const oneMonthAgo = new Date(now);
-      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-      filteredWorkouts = completedWorkouts.filter(workout => 
-        new Date(workout.date) >= oneMonthAgo
-      );
-    }
-
-    // Group and format data based on metric type
-    if (metricType === "muscles") {
-      // For muscle groups, we need a pie chart of most trained muscle groups
-      const muscleGroups: Record<string, number> = {};
-      
-      filteredWorkouts.forEach(workout => {
-        const workoutDetails = userProfile.workoutsCompleted > 0 ? 
-          { targetMuscleGroups: ["Full Body"] } : { targetMuscleGroups: [] };
-        
-        workoutDetails.targetMuscleGroups.forEach(group => {
-          if (!muscleGroups[group]) muscleGroups[group] = 0;
-          muscleGroups[group]++;
-        });
-      });
-      
-      return Object.entries(muscleGroups).map(([name, value]) => ({ name, value }));
-    } else {
-      // For other metrics, prepare time series data
-      let groupedData: Record<string, any> = {};
-      
-      if (timeframe === "weekly") {
-        // Group by day of week
-        const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-        days.forEach(day => {
-          groupedData[day] = { day, count: 0, calories: 0, duration: 0 };
-        });
-        
-        filteredWorkouts.forEach(workout => {
-          const day = days[new Date(workout.date).getDay()];
-          groupedData[day].count++;
-          groupedData[day].calories += 300; // Placeholder value
-          groupedData[day].duration += workout.duration;
-        });
-        
-        return Object.values(groupedData);
-      } else if (timeframe === "monthly") {
-        // Group by date within the month
-        filteredWorkouts.forEach(workout => {
-          const date = new Date(workout.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-          if (!groupedData[date]) {
-            groupedData[date] = { date, count: 0, calories: 0, duration: 0 };
-          }
-          groupedData[date].count++;
-          groupedData[date].calories += 300; // Placeholder value
-          groupedData[date].duration += workout.duration;
-        });
-        
-        return Object.values(groupedData);
-      } else {
-        // All time - group by month
-        filteredWorkouts.forEach(workout => {
-          const month = new Date(workout.date).toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-          if (!groupedData[month]) {
-            groupedData[month] = { month, count: 0, calories: 0, duration: 0 };
-          }
-          groupedData[month].count++;
-          groupedData[month].calories += 300; // Placeholder value
-          groupedData[month].duration += workout.duration;
-        });
-        
-        return Object.values(groupedData);
-      }
-    }
-  }, [completedWorkouts, timeframe, metricType, userProfile]);
-
-  // Get relevant chart properties based on metric type
-  const getChartProps = () => {
-    switch (metricType) {
-      case "workouts":
-        return {
-          title: "Workout Frequency",
-          description: `Number of workouts completed ${timeframe === "weekly" ? "this week" : timeframe === "monthly" ? "this month" : "all time"}`,
-          dataKey: "count",
-          fill: "#9b87f5",
-          label: "Workouts"
-        };
-      case "calories":
-        return {
-          title: "Calories Burned",
-          description: `Estimated calories burned ${timeframe === "weekly" ? "this week" : timeframe === "monthly" ? "this month" : "all time"}`,
-          dataKey: "calories",
-          fill: "#F97316",
-          label: "Calories"
-        };
-      case "duration":
-        return {
-          title: "Workout Duration",
-          description: `Total workout time ${timeframe === "weekly" ? "this week" : timeframe === "monthly" ? "this month" : "all time"}`,
-          dataKey: "duration",
-          fill: "#10B981",
-          label: "Minutes"
-        };
-      case "muscles":
-        return {
-          title: "Muscle Groups Trained",
-          description: `Distribution of muscle groups trained ${timeframe === "weekly" ? "this week" : timeframe === "monthly" ? "this month" : "all time"}`,
-          dataKey: "value",
-          nameKey: "name",
-          label: "Sessions"
-        };
-      default:
-        return {
-          title: "Workout Frequency",
-          description: `Number of workouts completed ${timeframe === "weekly" ? "this week" : timeframe === "monthly" ? "this month" : "all time"}`,
-          dataKey: "count",
-          fill: "#9b87f5",
-          label: "Workouts"
-        };
-    }
-  };
-
-  const chartProps = getChartProps();
-
-  // Stats cards
-  const statsData = {
-    totalWorkouts: userProfile.workoutsCompleted,
-    streakDays: userProfile.streakDays,
-    lastWorkoutDate: userProfile.lastWorkoutDate ? 
-      new Date(userProfile.lastWorkoutDate).toLocaleDateString() : "Never",
-    fitnessGoal: userProfile.fitnessGoal.replace("_", " ")
-  };
 
   return (
     <div className="space-y-6 animate-fade-in">

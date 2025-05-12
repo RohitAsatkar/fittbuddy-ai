@@ -47,7 +47,7 @@ export function ProgressFilters({
           onValueChange={(value) => {
             if (value) onMetricChange(value);
           }}
-          className="justify-start"
+          className="justify-start flex flex-wrap"
         >
           <ToggleGroupItem value="workouts" aria-label="Workout count">
             <Dumbbell className="mr-1 h-4 w-4" />
