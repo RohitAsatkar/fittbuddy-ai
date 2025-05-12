@@ -20,7 +20,7 @@ export default function ProgressPage() {
     
     return () => {
       // Clean up step tracking when leaving page
-      stepService.stopSimulation();
+      stepService.stopTracking();
     };
   }, []);
   

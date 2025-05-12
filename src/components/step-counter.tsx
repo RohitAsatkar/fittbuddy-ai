@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Footprints } from "lucide-react";
 import { StepTrackingService } from "@/services/StepTrackingService";
 import { Button } from "./ui/button";
+import { toast } from "@/components/ui/use-toast";
 
 export function StepCounter() {
   const [steps, setSteps] = useState(0);
@@ -25,8 +26,8 @@ export function StepCounter() {
     
     return () => {
       removeListener();
-      // Stop simulation when component unmounts
-      stepService.stopSimulation();
+      // Stop tracking when component unmounts
+      stepService.stopTracking();
     };
   }, []);
   
@@ -34,11 +35,19 @@ export function StepCounter() {
     const stepService = StepTrackingService.getInstance();
     
     if (isTracking) {
-      stepService.stopSimulation();
+      stepService.stopTracking();
       setIsTracking(false);
+      toast({
+        title: "Step tracking stopped",
+        description: "Your steps are no longer being tracked"
+      });
     } else {
-      stepService.startSimulation();
+      stepService.startTracking();
       setIsTracking(true);
+      toast({
+        title: "Step tracking started",
+        description: "Your steps are now being tracked"
+      });
     }
   };
   

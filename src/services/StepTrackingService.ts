@@ -5,12 +5,15 @@ export interface StepData {
   goal: number;
 }
 
+type StepListener = (steps: number) => void;
+
 export class StepTrackingService {
   private static instance: StepTrackingService;
   private stepCount: number = 0;
   private dailyGoal: number = 10000; // Default daily goal
   private simulationInterval: number | null = null;
-  private stepListeners: Array<(steps: number) => void> = [];
+  private stepListeners: Array<StepListener> = [];
+  private isUsingRealSensor: boolean = false;
 
   private constructor() {
     this.loadStepData();
@@ -23,27 +26,57 @@ export class StepTrackingService {
     return StepTrackingService.instance;
   }
 
+  public startTracking(): void {
+    // For now, we'll always use simulation
+    // Later, this will check if real sensors are available
+    this.startSimulation();
+  }
+
+  public stopTracking(): void {
+    if (this.isUsingRealSensor) {
+      // This will be used later for removing real sensor listeners
+      this.isUsingRealSensor = false;
+    } else {
+      this.stopSimulation();
+    }
+  }
+
   public startSimulation(): void {
     if (this.simulationInterval) {
       return; // Already running
     }
     
-    // Simulate step increments randomly between 1-3 steps every 2-5 seconds
+    // Enhanced simulation to be more realistic
+    // Simulate step increments with variable timing to feel more natural
     this.simulationInterval = window.setInterval(() => {
-      const stepsToAdd = Math.floor(Math.random() * 3) + 1;
-      this.stepCount += stepsToAdd;
-      this.saveStepData();
-      this.notifyListeners();
-    }, Math.floor(Math.random() * 3000) + 2000);
+      // More realistic step counting simulation:
+      // - Sometimes adds multiple steps (like when walking)
+      // - Sometimes adds nothing (like when standing still)
+      // - Variation in the timing
+      const activity = Math.random();
+      let stepsToAdd = 0;
+      
+      if (activity > 0.7) { // Active movement
+        stepsToAdd = Math.floor(Math.random() * 5) + 1; // 1-5 steps
+      } else if (activity > 0.4) { // Light movement
+        stepsToAdd = Math.floor(Math.random() * 2) + 1; // 1-2 steps
+      } // else no steps (standing still)
+      
+      if (stepsToAdd > 0) {
+        this.stepCount += stepsToAdd;
+        this.saveStepData();
+        this.notifyListeners();
+      }
+    }, Math.floor(Math.random() * 1500) + 500); // Random interval between 0.5-2s
     
-    console.log('Step simulation started');
+    console.log('Step tracking started (simulation mode)');
   }
 
   public stopSimulation(): void {
     if (this.simulationInterval) {
       window.clearInterval(this.simulationInterval);
       this.simulationInterval = null;
-      console.log('Step simulation stopped');
+      console.log('Step tracking stopped');
     }
   }
 
@@ -73,7 +106,7 @@ export class StepTrackingService {
     return this.dailyGoal;
   }
 
-  public addStepListener(listener: (steps: number) => void): () => void {
+  public addStepListener(listener: StepListener): () => void {
     this.stepListeners.push(listener);
     
     // Return function to remove listener
