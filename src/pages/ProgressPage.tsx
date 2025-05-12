@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavBar } from "@/components/nav-bar";
 import { ProgressChart } from "@/components/progress-chart";
 import { ProgressFilters } from "@/components/progress-filters";
@@ -7,17 +7,29 @@ import { ProgressInsights } from "@/components/progress-insights";
 import { WorkoutHistory } from "@/components/workout-history";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProgressAchievements } from "@/components/progress-achievements";
+import { StepTrackingService } from "@/services/StepTrackingService";
 
 export default function ProgressPage() {
   const [timeframe, setTimeframe] = useState<"weekly" | "monthly" | "all">("weekly");
-  const [metricType, setMetricType] = useState<"workouts" | "calories" | "duration" | "muscles">("workouts");
+  const [metricType, setMetricType] = useState<"workouts" | "calories" | "duration" | "muscles" | "steps">("workouts");
+  
+  useEffect(() => {
+    // Initialize step tracking when the progress page loads
+    const stepService = StepTrackingService.getInstance();
+    stepService.loadStepData();
+    
+    return () => {
+      // Clean up step tracking when leaving page
+      stepService.stopSimulation();
+    };
+  }, []);
   
   const handleTimeframeChange = (value: string) => {
     setTimeframe(value as "weekly" | "monthly" | "all");
   };
   
   const handleMetricChange = (value: string) => {
-    setMetricType(value as "workouts" | "calories" | "duration" | "muscles");
+    setMetricType(value as "workouts" | "calories" | "duration" | "muscles" | "steps");
   };
 
   return (
@@ -40,9 +52,11 @@ export default function ProgressPage() {
           />
         </div>
         
-        <div className="mt-8">
-          <ProgressInsights />
-        </div>
+        {metricType !== "steps" && (
+          <div className="mt-8">
+            <ProgressInsights />
+          </div>
+        )}
         
         <div className="mt-8">
           <Tabs defaultValue="history" className="w-full">

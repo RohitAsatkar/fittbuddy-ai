@@ -1,3 +1,4 @@
+
 import { useUser } from "@/context/UserContext";
 import { 
   BarChart as BarChartIcon, 
@@ -5,7 +6,8 @@ import {
   Dumbbell, 
   TrendingUp, 
   Trophy,
-  PieChart
+  PieChart,
+  Footprints
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -26,17 +28,31 @@ import {
 import { EmptyState } from "./ui/empty-state";
 import { Button } from "./ui/button";
 import { Link } from "react-router-dom";
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
+import { StepCounter } from "./step-counter";
+import { StepTrackingService } from "@/services/StepTrackingService";
+import { StepData } from "@/types";
 
 interface ProgressChartProps {
   timeframe: "weekly" | "monthly" | "all";
-  metricType: "workouts" | "calories" | "duration" | "muscles";
+  metricType: "workouts" | "calories" | "duration" | "muscles" | "steps";
 }
 
 const COLORS = ["#9b87f5", "#4C4CFF", "#F97316", "#10B981", "#8B5CF6", "#EC4899"];
 
 export function ProgressChart({ timeframe, metricType }: ProgressChartProps) {
   const { userProfile, completedWorkouts } = useUser();
+  const [stepHistory, setStepHistory] = useState<StepData[]>([]);
+
+  useEffect(() => {
+    if (metricType === "steps") {
+      const stepService = StepTrackingService.getInstance();
+      const history = stepService.getStepHistory(
+        timeframe === "weekly" ? 7 : timeframe === "monthly" ? 30 : 90
+      );
+      setStepHistory(history);
+    }
+  }, [timeframe, metricType]);
 
   if (!userProfile) {
     return (
@@ -50,6 +66,108 @@ export function ProgressChart({ timeframe, metricType }: ProgressChartProps) {
           </Button>
         }
       />
+    );
+  }
+
+  if (metricType === "steps") {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        {/* Stats cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <StepCounter />
+          <Card className="shadow-md">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-fitness-purple" />
+                Step Statistics
+              </CardTitle>
+              <CardDescription>Your step tracking insights</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Average Steps</p>
+                  <p className="text-2xl font-bold">
+                    {stepHistory.length > 0
+                      ? Math.round(
+                          stepHistory.reduce((acc, day) => acc + day.count, 0) /
+                            stepHistory.length
+                        ).toLocaleString()
+                      : "0"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Goal Reached</p>
+                  <p className="text-2xl font-bold">
+                    {stepHistory.filter(day => day.count >= day.goal).length} days
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Steps</p>
+                  <p className="text-2xl font-bold">
+                    {stepHistory
+                      .reduce((acc, day) => acc + day.count, 0)
+                      .toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Current Goal</p>
+                  <p className="text-2xl font-bold">
+                    {stepHistory.length > 0
+                      ? stepHistory[stepHistory.length - 1].goal.toLocaleString()
+                      : "10,000"}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        
+        {/* Step Chart */}
+        {stepHistory.length > 0 && (
+          <Card className="shadow-md">
+            <CardHeader>
+              <CardTitle>Step History</CardTitle>
+              <CardDescription>
+                Your step count over the {timeframe === "weekly" ? "past week" : timeframe === "monthly" ? "past month" : "past 90 days"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[350px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={stepHistory}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="date" 
+                      tickFormatter={(date) => {
+                        const d = new Date(date);
+                        return d.toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric' 
+                        });
+                      }} 
+                    />
+                    <YAxis />
+                    <Tooltip 
+                      formatter={(value) => [`${value.toLocaleString()} steps`, 'Steps']}
+                      labelFormatter={(date) => {
+                        const d = new Date(date);
+                        return d.toLocaleDateString('en-US', { 
+                          weekday: 'long',
+                          month: 'long', 
+                          day: 'numeric' 
+                        });
+                      }}
+                    />
+                    <Bar dataKey="count" name="Steps" fill="#9b87f5" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="goal" name="Goal" fill="#E2E8F0" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     );
   }
 
@@ -187,6 +305,14 @@ export function ProgressChart({ timeframe, metricType }: ProgressChartProps) {
           dataKey: "value",
           nameKey: "name",
           label: "Sessions"
+        };
+      default:
+        return {
+          title: "Workout Frequency",
+          description: `Number of workouts completed ${timeframe === "weekly" ? "this week" : timeframe === "monthly" ? "this month" : "all time"}`,
+          dataKey: "count",
+          fill: "#9b87f5",
+          label: "Workouts"
         };
     }
   };

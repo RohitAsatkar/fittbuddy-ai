@@ -1,11 +1,11 @@
 
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Calendar, BarChart, Clock, Dumbbell } from "lucide-react";
+import { Calendar, BarChart, Clock, Dumbbell, Footprints } from "lucide-react";
 
 interface ProgressFiltersProps {
   timeframe: "weekly" | "monthly" | "all";
   onTimeframeChange: (value: string) => void;
-  metricType: "workouts" | "calories" | "duration" | "muscles";
+  metricType: "workouts" | "calories" | "duration" | "muscles" | "steps";
   onMetricChange: (value: string) => void;
 }
 
@@ -64,6 +64,10 @@ export function ProgressFilters({
           <ToggleGroupItem value="muscles" aria-label="Muscle groups">
             <Calendar className="mr-1 h-4 w-4" />
             Muscles
+          </ToggleGroupItem>
+          <ToggleGroupItem value="steps" aria-label="Step count">
+            <Footprints className="mr-1 h-4 w-4" />
+            Steps
           </ToggleGroupItem>
         </ToggleGroup>
       </div>

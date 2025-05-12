@@ -50,6 +50,7 @@ export type UserProfile = {
   workoutsCompleted: number;
   streakDays: number;
   lastWorkoutDate?: Date;
+  dailyStepGoal?: number;
 };
 
 export type CompletedWorkout = {
@@ -69,4 +70,10 @@ export type ChatMessage = {
   content: string;
   sender: 'user' | 'assistant';
   timestamp: Date;
+};
+
+export type StepData = {
+  count: number;
+  date: string; // ISO date string format YYYY-MM-DD
+  goal: number;
 };
